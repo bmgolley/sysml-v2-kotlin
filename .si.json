@@ -1,0 +1,14 @@
+{
+  "plugin": "org.smartide.plugin.git",
+  "run": "echo 'change command from .si.json file'",
+  "intelligence": {
+    ".kt": {
+      "enabled": false,
+      "run": "kotlin-language-server"
+    },
+    ".json": {
+      "enabled": false,
+      "run": "vscode-json-language-server --stdio"
+    }
+  }
+}
