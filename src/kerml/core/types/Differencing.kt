@@ -9,22 +9,28 @@ import sandbox.kerml.root.elements.Relationship
  */
 interface Differencing : Relationship {
     /**
-     * Type that partly determines interpretations of typeDifferenced, as described in Type::differencingType.
+     * [Type] that partly determines interpretations of [typeDifferenced], as described in
+     * [Type::differencingType][Type.differencingType].
      * 
+     * ```ocl
      * differencingType : Type {redefines target}
+     * ```
      */
     var differencingType: Type
-    
+
     override val target: List<Element>
         get() = listOf(differencingType)
-    
+
     /**
-     * Type with interpretations partly determined by differencingType, as described in Type::differencingType.
+     * [Type] with interpretations partly determined by [differencingType], as described in
+     * [Type::differencingType][Type.differencingType].
      * 
+     * ```ocl
      * /typeDifferenced : Type {subsets owningRelatedElement, redefines source}
+     * ```
      */
     val typeDifferenced: Type
-    
+
     override val source: List<Element>
         get() = listOf(typeDifferenced)
 }

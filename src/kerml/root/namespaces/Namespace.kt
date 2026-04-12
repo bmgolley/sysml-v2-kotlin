@@ -1,14 +1,12 @@
-@file:Suppress("unused")
-
 package sandbox.kerml.root.namespaces
 
 import sandbox.kerml.root.elements.Element
 
 /**
  * 
- * A Namespace is an Element that contains other Elements, known as its members, via Membership
+ * A `Namespace` is an [Element] that contains other Elements, known as its members, via [Membership]
  * Relationships with those Elements. The members of a Namespace may be owned by the Namespace, aliased
- * in the Namespace, or imported into the Namespace via Import Relationships.
+ * in the Namespace, or imported into the Namespace via [Import] Relationships.
  * A Namespace can provide names for its members via the memberNames and memberShortNames specified by the
  * Memberships in the Namespace. If a Membership specifies a memberName and/or memberShortName, then
  * those are names of the corresponding memberElement relative to the Namespace. For an OwningMembership, the
@@ -22,6 +20,7 @@ import sandbox.kerml.root.elements.Element
  * membership->forAll(m2 |
  * m1 <> m2 implies m1.isDistinguishableFrom(m2)))
  */
+@Suppress("unused")
 interface Namespace : Element {
     /**
      * The Memberships in this Namespace that result from the ownedImports of this Namespace.
@@ -108,11 +107,11 @@ interface Namespace : Element {
     }
 
     /**
-     * If visibility is not null, return the Memberships of this Namespace with the given visibility, including
-     * ownedMemberships with the given visibility and Memberships imported with the given visibility. If
-     * visibility is null, return all ownedMemberships and imported Memberships regardless of visibility. When
-     * computing imported Memberships, ignore this Namespace and any Namespaces in the given excluded set.
-     * 
+     * If [visibility] is not `null`, return the [Memberships][Membership] of this `Namespace` with the given [Membership.visibility], including
+     * [ownedMemberships][ownedMembership] with the given [Membership.visibility] and [Memberships][Membership] imported with the given [Membership.visibility]. If
+     * [visibility] is `null`, return all [ownedMemberships][ownedMembership] and imported [Memberships][Membership] regardless of [Membership.visibility]. When
+     * computing imported [Memberships][Membership], ignore this `Namespace` and any `Namespaces` in the given excluded set.
+     *
      * membershipsOfVisibility(visibility : VisibilityKind [0..1], excluded : Namespace [0..*]) : Membership [0..*]
      * body: ownedMembership->
      *     select(mem | visibility = null or mem.visibility = visibility)->
@@ -120,13 +119,10 @@ interface Namespace : Element {
      *         select(imp | visibility = null or imp.visibility = visibility).
      *         importedMemberships(excluded->including(self)))
      */
-    fun membershipsOfVisibility(excluded: Collection<Namespace> = emptySet()): List<Membership> =
-        membershipsOfVisibility(null, excluded)
-
     fun membershipsOfVisibility(
         visibility: VisibilityKind?,
         excluded: Collection<Namespace> = emptySet()
-    ): List<Membership> {
+    ): Collection<Membership> {
         val excludedSelf = buildSet { addAll(excluded); add(this@Namespace) }
         return (ownedMembership.filter { visibility == null || it.visibility == visibility }
             + ownedImport.filter { visibility == null || it.visibility == visibility }
@@ -266,7 +262,7 @@ interface Namespace : Element {
     fun visibilityOf(mem: Membership): VisibilityKind = when (mem) {
         in importedMembership -> ownedImport.first { mem in it.importedMemberships() }.visibility
         in membership -> mem.visibility
-        else -> VisibilityKind.PRIVATE
+        else -> PRIVATE
     }
 
     /**
@@ -293,11 +289,8 @@ interface Namespace : Element {
         excluded: Collection<Namespace> = emptySet(),
         isRecursive: Boolean = false,
         includeAll: Boolean = false,
-    ): List<Membership> {
-        val visibleMemberships = membershipsOfVisibility(
-            if (!includeAll) VisibilityKind.PUBLIC else null,
-            excluded,
-        )
+    ): Collection<Membership> {
+        val visibleMemberships = membershipsOfVisibility(if (!includeAll) PUBLIC else null, excluded)
         return if (!isRecursive) {
             visibleMemberships
         } else {

@@ -14,17 +14,17 @@ interface Intersecting : Relationship {
      * intersectingType : Type {redefines target}
      */
     var intersectingType: Type
-    
+
     override val target: List<Element>
         get() = listOf(intersectingType)
-    
+
     /**
      * Type with interpretations partly determined by intersectingType, as described in Type::intersectingType.
      * 
      * /typeIntersected : Type {subsets owningRelatedElement, redefines source}
      */
     val typeIntersected: Type
-    
+
     override val source: List<Element>
         get() = listOf(typeIntersected)
 }

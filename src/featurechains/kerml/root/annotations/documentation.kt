@@ -1,6 +1,6 @@
 @file:Suppress("unused")
 
-package sandbox.paths.kerml.root.annotations
+package sandbox.featurechains.kerml.root.annotations
 
 import sandbox.kerml.root.annotations.Documentation
 import sandbox.kerml.root.elements.Element

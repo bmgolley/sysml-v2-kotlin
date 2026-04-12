@@ -27,7 +27,7 @@ interface Import : Relationship {
      * /importedElement : Element
      */
     val importedElement: Element
-    
+
     /**
      * The Namespace into which Memberships are imported by this Import, which must be the owningRelatedElement
      * of the Import.
@@ -36,24 +36,24 @@ interface Import : Relationship {
      */
     val importOwningNamespace: Namespace
         get() = checkNotNull(owningRelatedElement) as Namespace
-    
+
     override val source: List<Element>
         get() = listOf(importOwningNamespace)
-        
+
     /**
      * Whether to import memberships without regard to declared visibility.
      * 
      * isImportAll : Boolean
      */
     var isImportAll: Boolean
-    
+
     /**
      * Whether to recursively import Memberships from visible, owned sub-Namespaces.
      * 
      * isRecursive : Boolean
      */
     var isRecursive: Boolean
-    
+
     /**
      * The visibility level of the imported members from this Import relative to the importOwningNamespace. The
      * default is private.
@@ -61,7 +61,7 @@ interface Import : Relationship {
      * visibility : VisibilityKind
      */
     var visibility: VisibilityKind
-    
+
     /**
      * Returns Memberships that are to become importedMemberships of the importOwningNamespace. (The
      * excluded parameter is used to handle the possibility of circular Import Relationships.)

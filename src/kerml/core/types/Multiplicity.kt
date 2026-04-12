@@ -35,4 +35,4 @@ import sandbox.kerml.core.features.Feature
  *     featuringType->isEmpty()
  *     endif
  */
-interface Multiplicity: Feature
+interface Multiplicity : Feature

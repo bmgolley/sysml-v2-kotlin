@@ -4,10 +4,11 @@ import sandbox.kerml.root.elements.Element
 
 /**
  * 
- A MembershipImport is an Import that imports its importedMembership into the importOwningNamespace.
+A MembershipImport is an Import that imports its importedMembership into the importOwningNamespace.
  * If isRecursive = true and the memberElement of the importedMembership is a Namespace, then the
  * equivalent of a recursive NamespaceImport is also performed on that Namespace.
  */
+@Suppress("unused")
 interface MembershipImport : Import {
     /**
      * The Membership to be imported.
@@ -20,13 +21,13 @@ interface MembershipImport : Import {
      *     importedElement = importedMembership.memberElement
      */
     var importedMembership: Membership
-    
+
     override val target: List<Element>
         get() = listOf(importedMembership)
-    
+
     override val importedElement: Element
         get() = importedMembership.memberElement
-    
+
     /**
      * Returns at least the importedMembership. If isRecursive = true and the memberElement of the
      * importedMembership is a Namespace, then Memberships are also recursively imported from that Namespace.

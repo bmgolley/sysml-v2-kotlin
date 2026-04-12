@@ -1,6 +1,6 @@
 @file:Suppress("unused")
 
-package sandbox.paths.kerml.root.dependencies
+package sandbox.featurechains.kerml.root.dependencies
 
 import sandbox.kerml.root.dependencies.Dependency
 import sandbox.kerml.root.elements.Element

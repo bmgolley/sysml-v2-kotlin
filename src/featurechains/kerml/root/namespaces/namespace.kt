@@ -1,6 +1,6 @@
 @file:Suppress("unused")
 
-package sandbox.paths.kerml.root.namespaces
+package sandbox.featurechains.kerml.root.namespaces
 
 import sandbox.kerml.root.elements.Element
 import sandbox.kerml.root.namespaces.Import

@@ -1,6 +1,7 @@
 package sandbox.kerml.core.types
 
 import sandbox.kerml.core.features.Feature
+import sandbox.kerml.root.elements.Element
 import sandbox.kerml.root.namespaces.Namespace
 import sandbox.kerml.root.namespaces.OwningMembership
 
@@ -19,16 +20,16 @@ interface FeatureMembership : OwningMembership {
      * /ownedMemberFeature : Feature {redefines ownedMemberElement}
      */
     val ownedMemberFeature: Feature
-    
-    override ownedMemberElement: Element
+
+    override val ownedMemberElement: Element
         get() = ownedMemberFeature
-    
+
     /**
      * /owningType : Type {subsets type, redefines membershipOwningNamespace}
      */
     val owningType: Type
-    
-    override val membershipOwningNamespace: Namespace 
+
+    override val membershipOwningNamespace: Namespace
         get() = owningType
 }
 

@@ -9,6 +9,7 @@ import sandbox.kerml.root.elements.Relationship
  * disjoint from a Classifier for minerals, and a Feature for people's parents is disjoint from a Feature for their
  * children.
  */
+@Suppress("unused")
 interface Disjoining : Relationship {
     /**
      * Type asserted to be disjoint with the typeDisjoined.
@@ -16,10 +17,10 @@ interface Disjoining : Relationship {
      * disjoiningType : Type {redefines target}
      */
     var disjoiningType: Type
-    
+
     override val target: List<Element>
         get() = listOf(disjoiningType)
-    
+
     /**
      * A typeDisjoined that is also an owningRelatedElement.
      * 
@@ -27,14 +28,14 @@ interface Disjoining : Relationship {
      */
     val owningType: Type?
         get() = typeDisjoined.takeIf { it === owningRelatedElement }
-    
+
     /**
      * Type asserted to be disjoint with the disjoiningType.
      * 
      * typeDisjoined : Type {redefines source}
      */
     var typeDisjoined: Type
-    
+
     override val source: List<Element>
         get() = listOf(typeDisjoined)
 }

@@ -13,6 +13,7 @@ import sandbox.kerml.root.elements.Relationship
  * A Type may participate as a conjugatedType in at most one Conjugation relationship, and such a Type may
  * not also be the specific Type in any Specialization relationship
  */
+@Suppress("unused")
 interface Conjugation : Relationship {
     /**
      * The Type that is the result of applying Conjugation to the originalType.
@@ -20,20 +21,20 @@ interface Conjugation : Relationship {
      * conjugatedType : Type {redefines source}
      */
     var conjugatedType: Type
-    
+
     override val source: List<Element>
         get() = listOf(conjugatedType)
-    
+
     /**
      * The Type to be conjugated.
      * 
      * originalType : Type {redefines target}
      */
     var originalType: Type
-    
+
     override val target: List<Element>
         get() = listOf(originalType)
-    
+
     /**
      * The conjugatedType of this Conjugation that is also its owningRelatedElement.
      * 

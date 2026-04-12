@@ -1,6 +1,6 @@
 @file:Suppress("unused")
 
-package sandbox.paths.kerml.root.annotations
+package sandbox.featurechains.kerml.root.annotations
 
 import sandbox.kerml.root.annotations.AnnotatingElement
 import sandbox.kerml.root.annotations.Annotation
@@ -15,5 +15,5 @@ val Iterable<AnnotatingElement>.annotation: List<Annotation>
 val Iterable<AnnotatingElement>.ownedAnnotatingRelationship: List<Annotation>
     get() = flatMap(AnnotatingElement::ownedAnnotatingRelationship)
 
-val Iterable<AnnotatingElement>.owningAnnotatingRelationship: List<Annotation>
-    get() = mapNotNull(AnnotatingElement::owningAnnotatingRelationship)
+val Iterable<AnnotatingElement>.owningAnnotatingRelationship: List<Annotation?>
+    get() = map(AnnotatingElement::owningAnnotatingRelationship)

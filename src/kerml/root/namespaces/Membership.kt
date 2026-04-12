@@ -20,10 +20,10 @@ interface Membership : Relationship {
      * memberElement : Element {redefines target}
      */
     var memberElement: Element
-    
+
     override val target: List<Element>
         get() = listOf(memberElement)
-      
+
     /**
      * The elementId of the memberElement.
      * /memberElementId : String
@@ -42,24 +42,24 @@ interface Membership : Relationship {
      * memberName : String [0..1]
      */
     var memberName: String?
-    
+
     /**
      * The Namespace of which the memberElement becomes a member due to this Membership.
      * 
      * /membershipOwningNamespace : Namespace {subsets membershipNamespace, owningRelatedElement, redefines source}
      */
     val membershipOwningNamespace: Namespace
-    
+
     override val source: List<Element>
         get() = listOf(membershipOwningNamespace)
-    
+
     /**
      * The short name of the memberElement relative to the membershipOwningNamespace.
      * 
      * memberShortName : String [0..1]
      */
     var memberShortName: String?
-    
+
     /**
      * Whether or not the Membership of the memberElement in the membershipOwningNamespace is publicly visible
      * outside that Namespace.
@@ -67,7 +67,7 @@ interface Membership : Relationship {
      * visibility : VisibilityKind
      */
     var visibility: VisibilityKind
-    
+
     /**
      * Whether this Membership is distinguishable from a given other Membership. By default, this is true if this
      * Membership has no memberShortName or memberName; or each of the memberShortName and memberName are

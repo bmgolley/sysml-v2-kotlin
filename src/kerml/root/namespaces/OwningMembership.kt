@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package sandbox.kerml.root.namespaces
 
 import sandbox.kerml.root.elements.Element
@@ -5,7 +7,7 @@ import sandbox.kerml.root.elements.Relationship
 
 /**
  * An OwningMembership is a Membership that owns its memberElement as a ownedRelatedElement. The
-ownedMemberElement becomes an ownedMember of the membershipOwningNamespace.
+ * ownedMemberElement becomes an ownedMember of the membershipOwningNamespace.
  */
 interface OwningMembership : Membership {
     /**
@@ -16,17 +18,17 @@ interface OwningMembership : Membership {
      */
     val ownedMemberElement: Element
         get() = memberElement
-    
+
     /**
      * The elementId of the ownedMemberElement.
      * 
      * /ownedMemberElementId : String {redefines memberElementId}
      */
     val ownedMemberElementId: String
-    
+
     override val memberElementId: String
         get() = ownedMemberElementId
-    
+
     /**
      * The name of the ownedMemberElement.
      * 
@@ -38,7 +40,7 @@ interface OwningMembership : Membership {
      */
     val ownedMemberName: String?
         get() = ownedMemberElement.name
-    
+
     /**
      * The shortName of the ownedMemberElement
      * 
@@ -50,7 +52,7 @@ interface OwningMembership : Membership {
      */
     val ownedMemberShortName: String?
         get() = ownedMemberElement.shortName
-    
+
     /**
      * If the ownedMemberElement of this OwningMembership has a non-null qualifiedName, then return the string
      * constructed by appending to that qualifiedName the string "/owningMembership". Otherwise, return the path
