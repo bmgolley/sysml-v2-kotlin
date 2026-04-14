@@ -651,53 +651,98 @@ interface Type : Namespace {
         inheritedMemberships(excluded.plus(this@Type), excludeImplied = isRecursive)
             .filterTo(this) { includeAll || it.visibility == PUBLIC }
     }
+    
+    object Validation : Validator<Type> {
+        override val rules = buildList {
+            addAll(Type.Validation.rules)
+            add(::validateTypeAtMostOneConjugator)
+            add(::validateTypeDifferencingTypesNotSelf)
+            add(::validateTypeIntersectingTypesNotSelf)
+            add(::validateTypeOwnedDifferencingNotOne)
+            add(::validateTypeOwnedIntersectingNotOne)
+            add(::validateTypeOwnedMultiplicity)
+            add(::validateTypeOwnedUnioningNotOne)
+            add(::validateTypeUnioningTypesNotSelf)
+        }
+
+        /**
+         * A Type must have at most one owned Conjugation Relationship.
+         * 
+         * ```ocl
+         * ownedRelationship->selectByKind(Conjugation)->size() <= 1
+         * ```
+         */
+        fun Type.validateTypeAtMostOneConjugator(): Boolean = ownedRelationship.count(Conjugation::isInstance) <= 1
+        
+        /**
+         * A Type cannot be one of its own differencingTypes.
+         * 
+         * ```ocl
+         * differencingType->excludes(self)
+         * ```
+         */
+        fun Type.validateTypeDifferencingTypesNotSelf(): Boolean = this !in differencingType
+        
+        /**
+         * A Type cannot be one of its own intersectingTypes.
+         * 
+         * ```ocl
+         * intersectingType->excludes(self)
+         * ```
+         */
+        fun Type.validateTypeIntersectingTypesNotSelf(): Boolean = this !in intersectingType
+        
+        /**
+         * A Type must not have exactly one ownedDifferencing.
+         * 
+         * ```ocl
+         * ownedDifferencing->size() <> 1
+         * ```
+         */
+        fun Type.validateTypeOwnedDifferencingNotOne(): Boolean = ownedDifferencing.size != 1
+        
+        /**
+         * A Type must not have exactly one ownedIntersecting.
+         * 
+         * ```ocl
+         * ownedIntersecting->size() <> 1
+         * ```
+         */
+        fun Type.validateTypeOwnedIntersectingNotOne(): Boolean = ownedIntersecting.size != 1
+        
+        /**
+         * A Type may have at most one ownedMember that is a Multiplicity.
+         * 
+         * ```ocl
+         * ownedMember->selectByKind(Multiplicity)->size() <= 1
+         * ```
+         */
+        fun Type.validateTypeOwnedMultiplicity(): Boolean = ownedMember.count(Multiplicity::isInstance) <= 1
+        
+        /**
+         * A Type must not have exactly one ownedUnioning.
+         * 
+         * ```ocl
+         * ownedUnioning->size() <> 1
+         * ```
+         */
+        fun Type.validateTypeOwnedUnioningNotOne(): Boolean = ownedUnioning.size != 1
+        
+        /**
+         * A Type cannot be one of its own unioningTypes.
+         * 
+         * ```ocl
+         * unioningType->excludes(self)
+         * ```
+         */
+        fun Type.validateTypeUnioningTypesNotSelf(): Boolean = this !in unioningType
+    }
 }
 
 /*
-
 Constraints
 
 checkTypeSpecialization
 A Type must directly or indirectly specialize Base::Anything from the Kernel Semantic Library.
 specializesFromLibrary('Base::Anything')
-
-
-deriveTypeOwnedSpecialization
-The ownedSpecializations of a Type are the ownedRelationships that are Specializations whose
-special Type is the owning Type.
-ownedSpecialization = ownedRelationship->selectByKind(Specialization)->
-select(s | s.special = self)
-
-deriveTypeOwnedUnioning
-The ownedUnionings of a Type are the ownedRelationships that are Unionings.
-
-
-deriveTypeUnioningType
-The unioningTypes of a Type are the unioningTypes of its ownedUnionings.
-
-
-validateTypeAtMostOneConjugator
-A Type must have at most one owned Conjugation Relationship.
-ownedRelationship->selectByKind(Conjugation)->size() <= 1
-validateTypeDifferencingTypesNotSelf
-A Type cannot be one of its own differencingTypes.
-differencingType->excludes(self)
-validateTypeIntersectingTypesNotSelf
-A Type cannot be one of its own intersectingTypes.
-intersectingType->excludes(self)
-validateTypeOwnedDifferencingNotOne
-A Type must not have exactly one ownedDifferencing.
-ownedDifferencing->size() <> 1
-validateTypeOwnedIntersectingNotOne
-A Type must not have exactly one ownedIntersecting.
-ownedIntersecting->size() <> 1
-validateTypeOwnedMultiplicity
-A Type may have at most one ownedMember that is a Multiplicity.
-ownedMember->selectByKind(Multiplicity)->size() <= 1
-validateTypeOwnedUnioningNotOne
-A Type must not have exactly one ownedUnioning.
-ownedUnioning->size() <> 1
-validateTypeUnioningTypesNotSelf
-A Type cannot be one of its own unioningTypes.
-unioningType->excludes(self)
 */

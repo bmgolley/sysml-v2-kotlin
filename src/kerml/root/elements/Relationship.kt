@@ -117,4 +117,8 @@ interface Relationship : Element {
     } else {
         super.path()
     }
+    
+    object Validation : Validator<Relationship> {
+        override fun Relationship.validate() = Element.Validator.validate(this)
+    }
 }

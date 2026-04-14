@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package sandbox.kerml.root.elements
 
 import sandbox.kerml.root.annotations.Annotation
@@ -10,18 +12,7 @@ import sandbox.kerml.root.namespaces.OwningMembership
  * An Element is a constituent of a model that is uniquely identified relative to all other Elements. It can have
  * Relationships with other Elements. Some of these Relationships might imply ownership of other
  * Elements, which means that if an Element is deleted from a model, then so are all the Elements that it owns.
- * 
- * Constraints:
- * - validateElementIsImpliedIncluded
- *     If an Element has any ownedRelationships for which isImplied = true, then the Element must also have
- *     isImpliedIncluded = true. (Note that an Element can have isImplied = true even if no
- *     ownedRelationships have isImplied = true, indicating the Element simply has no implied
- *     Relationships.
- *     ```ocl
- *     ownedRelationship->exists(isImplied) implies isImpliedIncluded
- *     ```
  */
-@Suppress("unused")
 interface Element {
     /**
      * Various alternative identifiers for this Element. Generally, these will be set by tools.
@@ -347,6 +338,23 @@ interface Element {
         ?: owningRelationship?.let {
             "${it.path()}/${it.ownedRelatedElement.indexOf(this)}"
         }.orEmpty()
+    
+    object Validation : Validator<Element> {
+        override fun Element.validate() = mapOf(
+            this@Validation::validateElementIsImpliedIncluded to validateElementIsImpliedIncluded()
+        )
+
+        /**
+         * If an Element has any ownedRelationships for which isImplied = true, then the Element must also have
+         * isImpliedIncluded = true. (Note that an Element can have isImplied = true even if no
+         * ownedRelationships have isImplied = true, indicating the Element simply has no implied
+         * Relationships.
+         * ```ocl
+         * ownedRelationship->exists(isImplied) implies isImpliedIncluded
+         * ```
+         */
+        fun Element.validateElementIsImpliedIncluded() = ownedRelationship.any(Relationship::isImplied) implies isImpliedIncluded
+    }
 }
 /*
 val Element.relationship: Collection<Relationship>

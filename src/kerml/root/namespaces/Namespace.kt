@@ -13,12 +13,6 @@ import sandbox.kerml.root.elements.Element
  * ownedMemberName and ownedMemberShortName are given by the Element name and shortName. Note that the
  * same Element may be the memberElement of multiple Memberships in a Namespace (though it may be owned
  * at most once), each of which may define a separate alias for the Element relative to the Namespace.
- * 
- * validateNamespaceDistinguishibility
- * All memberships of a Namespace must be distinguishable from each other.
- * membership->forAll(m1 |
- * membership->forAll(m2 |
- * m1 <> m2 implies m1.isDistinguishableFrom(m2)))
  */
 @Suppress("unused")
 interface Namespace : Element {
@@ -299,6 +293,22 @@ interface Namespace : Element {
                 + ownedMember.filterIsInstance<Namespace>()
                 .filter { includeAll || it.owningMembership?.visibility == VisibilityKind.PUBLIC }
                 .flatMap { it.visibleMemberships(excludedSelf, true, includeAll) })
+        }
+    }
+    
+    object Validation : Validator<Namespace> {
+        override fun Namespace.validate() = validateNamespaceDistinguishibility() && Element.Validation.validate(this)
+
+        /**
+         * All memberships of a Namespace must be distinguishable from each other.
+         * membership->forAll(m1 |
+         * membership->forAll(m2 |
+         * m1 <> m2 implies m1.isDistinguishableFrom(m2)))
+         */
+        fun Namespace.validateNamespaceDistinguishibility() = membership.all { m1 ->
+            membership.all { m2 ->
+                (m1 != m2) implies m1.isDistinguishableFrom(m2)
+            }
         }
     }
 }
