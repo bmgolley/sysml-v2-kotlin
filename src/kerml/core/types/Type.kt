@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package sandbox.kerml.core.types
 
 import sandbox.featurechains.kerml.core.features.redefinedFeature
@@ -5,9 +7,11 @@ import sandbox.featurechains.kerml.core.features.redefinition
 import sandbox.featurechains.kerml.core.types.differencingType
 import sandbox.featurechains.kerml.core.types.directionOfExcluding
 import sandbox.featurechains.kerml.core.types.general
+import sandbox.featurechains.kerml.core.types.intersectingType
 import sandbox.featurechains.kerml.core.types.multiplicity
 import sandbox.featurechains.kerml.core.types.nonPrivateMemberships
 import sandbox.featurechains.kerml.core.types.ownedMemberFeature
+import sandbox.featurechains.kerml.core.types.unioningType
 import sandbox.kerml.core.classifiers.Classifier
 import sandbox.kerml.core.features.Feature
 import sandbox.kerml.root.elements.Element
@@ -20,7 +24,6 @@ import sandbox.kerml.root.namespaces.Import
  * `Type` may be a [Classifier] or a [Feature], defining conditions on what is classified by the `Type` (see also the
  * description of [isSufficient]).
  */
-@Suppress("unused")
 interface Type : Namespace {
     /**
      * The interpretations of a `Type` with `differencingTypes` are asserted to be those of the first of those `Types`,
@@ -33,13 +36,7 @@ interface Type : Namespace {
      * 
      * ```ocl
      * /differencingType : Type [0..*] {ordered}
-     * ```
      *
-     * - deriveTypeDifferencingType
-     *
-     * The [differencingTypes][differencingType] of a `Type` are the [differencingTypes][differencingType] of its
-     * [ownedDifferencings][ownedDifferencing], in the same order.
-     * ```ocl
      * differencingType = ownedDifferencing.differencingType
      * ```
      */
@@ -51,13 +48,7 @@ interface Type : Namespace {
      * 
      * ```ocl
      * /directedFeature : Feature [0..*] {subsets feature, ordered}
-     * ```
      *
-     * - deriveTypeDirectedFeature
-     *
-     * The `directedFeatures` of a `Type` are those features for which the direction is non-null.
-     *
-     * ```ocl
      * directedFeature = feature->select(f | directionOf(f) <> null)
      * ```
      */
@@ -69,12 +60,7 @@ interface Type : Namespace {
      *
      * ```ocl
      * /endFeature : Feature [0..*] {subsets feature, ordered}
-     * ```
      *
-     * - deriveTypeEndFeature
-     * The [endFeatures][endFeature] of a Type are all its features for which [isEnd][Feature.isEnd]` = true`.
-     *
-     * ```ocl
      * endFeature = feature->select(isEnd)
      * ```
      */
@@ -87,13 +73,7 @@ interface Type : Namespace {
      * 
      * ```ocl
      * /feature : Feature [0..*] {subsets member, ordered}
-     * ```
      *
-     * - deriveTypeFeature
-     *
-     * The features of a `Type` are the ownedMemberFeatures of its [featureMemberships][featureMembership]
-     *
-     * ```ocl
      * feature = featureMembership.ownedMemberFeature
      * ```
      */
@@ -101,49 +81,79 @@ interface Type : Namespace {
         get() = featureMembership.ownedMemberFeature
 
     /**
-     * The FeatureMemberships for features of this Type, which include all ownedFeatureMemberships and
+     * The FeatureMemberships for features of this Type, which include all [ownedFeatureMemberships][ownedFeatureMembership] and
      * those inheritedMemberships that are FeatureMemberships (but does not include any
      * importedMemberships).
      * 
      * ```ocl
      * /featureMembership : FeatureMembership [0..*] {ordered}
+     *
+     * featureMembership = ownedFeatureMembership->union(
+     *      inheritedMembership->selectByKind(FeatureMembership))
      * ```
      */
     val featureMembership: List<FeatureMembership>
+        get() = inheritedMembership.filterIsInstance<FeatureMembership>()
 
     /**
      * All the memberFeatures of the inheritedMemberships of this Type that are FeatureMemberships.
      * 
-     * `/inheritedFeature : Feature [0..*] {subsets feature, ordered}`
+     * ```ocl
+     * /inheritedFeature : Feature [0..*] {subsets feature, ordered}
+     *
+     * inheritedFeature = inheritedMemberships->
+     *     selectByKind(FeatureMembership).memberFeature
+     * ```
      */
     val inheritedFeature: List<Feature>
+        get() = inheritedMembership.filterIsInstance<FeatureMembership>().ownedMemberFeature
 
     /**
-     * All Memberships inherited by this Type via Specialization or Conjugation. These are included in the
-     * derived union for the memberships of the Type.
+     * All [Memberships][Membership] inherited by this `Type` via [Specialization] or [Conjugation]. These are included
+     * in the derived union for the memberships of the `Type`.
      * 
-     * `/inheritedMembership : Membership [0..*] {subsets membership, ordered}`
+     * ```ocl
+     * /inheritedMembership : Membership [0..*] {subsets membership, ordered}
+     *
+     * inheritedMembership = inheritedMemberships(Set{}, Set{}, false)
+     * ```
      */
     val inheritedMembership: List<Membership>
+        get() = inheritedMemberships(emptySet(), emptySet(), false)
 
     /**
-     * All features related to this Type by FeatureMemberships that have direction in or inout.
+     * All features related to this `Type` by [FeatureMemberships][FeatureMembership] that have direction
+     * [in][FeatureDirectionKind.IN] or [inout][FeatureDirectionKind.INOUT].
      * 
-     * `/input : Feature [0..*] {subsets directedFeature, ordered}`
+     * ```ocl
+     * /input : Feature [0..*] {subsets directedFeature, ordered}
+     *
+     * input = feature->select(f |
+     *     let direction: FeatureDirectionKind = directionOf(f) in
+     *     direction = FeatureDirectionKind::_'in' or
+     *     direction = FeatureDirectionKind::inout)
+     * ```
      */
     val input: List<Feature>
+        get() = feature.filter { f -> directionOf(f).let { it == IN || it == INOUT } }
 
     /**
-     * The interpretations of a Type with intersectingTypes are asserted to be those in common among the
-     * intersectingTypes, which are the Types derived from the intersectingType of the ownedIntersectings
-     * of this Type. For example, a Classifier might be an intersection of Classifiers for people of a particular sex
-     * and of a particular nationality. Similarly, a feature for people's children of a particular sex might be the intersection
-     * of a Feature for their children and a Classifier for people of that sex (because the interpretations of the children
-     * Feature that identify those of that sex are also interpretations of the Classifier for that sex).
+     * The interpretations of a `Type` with `intersectingTypes` are asserted to be those in common among the
+     * `intersectingTypes`, which are the `Types` derived from the `intersectingType` of the
+     * [ownedIntersectings][ownedIntersecting] of this `Type`. For example, a [Classifier] might be an intersection of
+     * [Classifiers][Classifier] for people of a particular sex and of a particular nationality. Similarly, a feature
+     * for people's children of a particular sex might be the intersection of a [Feature] for their children and a
+     * [Classifier] for people of that sex (because the interpretations of the children [Feature] that identify those of
+     * that sex are also interpretations of the [Classifier] for that sex).
      * 
-     * `/intersectingType : Type [0..*] {ordered}`
+     * ```ocl
+     * /intersectingType : Type [0..*] {ordered}
+     *
+     * intersectingType = ownedIntersecting.intersectingType
+     * ```
      */
     val intersectingType: List<Type>
+        get() = ownedIntersecting.intersectingType
 
     /**
      * Indicates whether instances of this Type must also be instances of at least one of its specialized Types.
@@ -169,7 +179,9 @@ interface Type : Namespace {
      * require everything it classifies to have four wheels, but not all four wheeled things would classify as cars. However,
      * if the Type Car were sufficient, it would classify all four-wheeled things.)
      * 
-     * `isSufficient : Boolean`
+     * ```ocl
+     * isSufficient : Boolean
+     * ```
      */
     var isSufficient: Boolean
 
@@ -178,82 +190,154 @@ interface Type : Namespace {
      * such [ownedMember], then the cardinality of this Type is constrained by all the [Multiplicity] constraints
      * applicable to any direct supertypes.
      * 
-     * `/multiplicity : Multiplicity [0..1] {subsets ownedMember}`
+     * ```ocl
+     * /multiplicity : Multiplicity [0..1] {subsets ownedMember}
+     *
+     * multiplicity =
+     *     let ownedMultiplicities: Sequence(Multiplicity) =
+     *         ownedMember->selectByKind(Multiplicity) in
+     *     if ownedMultiplicities->isEmpty() then null
+     *     else ownedMultiplicities->first()
+     *     endif
+     * ```
      */
     val multiplicity: Multiplicity?
+        get() = ownedMember.firstOrNull(Multiplicity::class::isInstance) as Multiplicity?
 
     /**
      * All features related to this Type by [FeatureMemberships][FeatureMembership] that have direction
      * [out][FeatureDirectionKind.OUT] or [inout][FeatureDirectionKind.INOUT].
      * 
-     * `/output : Feature [0..*] {subsets directedFeature, ordered}`
+     * ```ocl
+     * /output : Feature [0..*] {subsets directedFeature, ordered}
+     *
+     * output = feature->select(f |
+     *     let direction: FeatureDirectionKind = directionOf(f) in
+     *     direction = FeatureDirectionKind::out or
+     *     direction = FeatureDirectionKind::inout)
+     * ```
      */
     val output: List<Feature>
+        get() = feature.filter { f -> directionOf(f).let { it == OUT || it == INOUT } }
 
     /**
      * A [Conjugation] owned by this Type for which the Type is the [originalType][Conjugation.originalType].
      * 
-     * `/ownedConjugator : Conjugation [0..1] {subsets ownedRelationship, conjugator}`
+     * ```ocl
+     * /ownedConjugator : Conjugation [0..1] {subsets ownedRelationship, conjugator}
+     *
+     * ownedConjugator =
+     *     let ownedConjugators: Sequence(Conjugator) =
+     *         ownedRelationship->selectByKind(Conjugation) in
+     *     if ownedConjugators->isEmpty() then null
+     *     else ownedConjugators->at(1) endif
+     * ```
      */
     val ownedConjugator: Conjugation?
+        get() = ownedRelationship.firstOrNull(Conjugation::class::isInstance) as Conjugation?
 
     /**
-     * The [ownedRelationships][ownedRelationship] of this Type that are [Differencings][Differencing], having this
+     * The [ownedRelationships][ownedRelationship] of this `Type` that are [Differencings][Differencing], having this
      * Type as their [typeDifferenced][Differencing.typeDifferenced].
      * 
-     * `/ownedDifferencing : Differencing [0..*] {subsets sourceRelationship, ownedRelationship, ordered}`
+     * ```ocl
+     * /ownedDifferencing : Differencing [0..*] {subsets sourceRelationship, ownedRelationship, ordered}
+     *
+     * ownedDifferencing = ownedRelationship->selectByKind(Differencing)
+     * ```
      */
     val ownedDifferencing: List<Differencing>
+        get() = ownedRelationship.filterIsInstance<Differencing>()
 
     /**
-     * The ownedRelationships of this Type that are Disjoinings, for which the Type is the typeDisjoined Type.
+     * The [ownedRelationships][ownedRelationship] of this `Type` that are [Disjoinings][Disjoining], for which the
+     * `Type` is the [typeDisjoined][Disjoining.typeDisjoined] `Type`.
      * 
-     * `/ownedDisjoining : Disjoining [0..*] {subsets ownedRelationship, disjoiningTypeDisjoining}`
+     * ```ocl
+     * /ownedDisjoining : Disjoining [0..*] {subsets ownedRelationship, disjoiningTypeDisjoining}
+     *
+     * ownedDisjoining = ownedRelationship->selectByKind(Disjoining)
+     * ```
      */
     val ownedDisjoining: List<Disjoining>
+        get() = ownedRelationship.filterIsInstance<Disjoining>()
 
     /**
-     * All endFeatures of this Type that are ownedFeatures.
+     * All [endFeatures][endFeature] of this `Type` that are [ownedFeatures][ownedFeature].
      * 
-     * `/ownedEndFeature : Feature [0..*] {subsets endFeature, ownedFeature, ordered}`
+     * ```ocl
+     * /ownedEndFeature : Feature [0..*] {subsets endFeature, ownedFeature, ordered}
+     *
+     * ownedEndFeature = ownedFeature->select(isEnd)
+     * ```
      */
     val ownedEndFeature: List<Feature>
+        get() = ownedFeature.filter(Feature::isEnd)
 
     /**
-     * The ownedMemberFeatures of the ownedFeatureMemberships of this Type.
+     * The [ownedMemberFeatures][ownedMemberFeature] of the [ownedFeatureMemberships][ownedFeatureMembership] of this
+     * `Type`.
      * 
-     * `/ownedFeature : Feature [0..*] {subsets ownedMember, ordered}`
+     * ```ocl
+     * /ownedFeature : Feature [0..*] {subsets ownedMember, ordered}
+     *
+     * ownedFeature = ownedFeatureMembership.ownedMemberFeature
+     * ```
      */
     val ownedFeature: List<Feature>
+        get() = ownedFeatureMembership.ownedMemberFeature
 
     /**
-     * The ownedMemberships of this Type that are FeatureMemberships, for which the Type is the owningType.
-     * Each such FeatureMembership identifies an ownedFeature of the Type.
+     * The [ownedMemberships][ownedMembership] of this `Type` that are [FeatureMemberships][FeatureMembership], for
+     * which the `Type` is the [owningType][FeatureMembership.owningType]. Each such [FeatureMembership] identifies an
+     * [ownedFeature] of the `Type`.
      * 
-     * `/ownedFeatureMembership : FeatureMembership [0..*] {subsets ownedMembership, featureMembership, ordered}`
+     * ```ocl
+     * /ownedFeatureMembership : FeatureMembership [0..*] {subsets ownedMembership, featureMembership, ordered}
+     *
+     * ownedFeatureMembership = ownedRelationship->selectByKind(FeatureMembership)
+     * ```
      */
     val ownedFeatureMembership: List<FeatureMembership>
+        get() = ownedRelationship.filterIsInstance<FeatureMembership>()
 
     /**
-     * The ownedRelationships of this Type that are Intersectings, have the Type as their typeIntersected.
+     * The [ownedRelationships][ownedRelationship] of this `Type` that are [Intersectings][Intersecting], have the
+     * `Type` as their [typeIntersected][Intersecting.typeIntersected].
      * 
-     * `/ownedIntersecting : Intersecting [0..*] {subsets ownedRelationship, sourceRelationship, ordered}`
+     * ```ocl
+     * /ownedIntersecting : Intersecting [0..*] {subsets ownedRelationship, sourceRelationship, ordered}
+     *
+     * ownedIntersecting = ownedRelationship->selectByKind(Intersecting)
+     * ```
      */
     val ownedIntersecting: List<Intersecting>
+        get() = ownedRelationship.filterIsInstance<Intersecting>()
 
     /**
-     * The ownedRelationships of this Type that are Specializations, for which the Type is the specific Type.
+     * The [ownedRelationships][ownedRelationship] of this `Type` that are [Specializations][Specialization], for which
+     * the `Type` is the [specific][Specialization.specific] `Type`.
      * 
-     * `/ownedSpecialization : Specialization [0..*] {subsets specialization, ownedRelationship, ordered}`
+     * ```ocl
+     * /ownedSpecialization : Specialization [0..*] {subsets specialization, ownedRelationship, ordered}
+     *
+     * ownedSpecialization = ownedRelationship->selectByKind(Specialization)->
+     *     select(s | s.special = self)
+     * ```
      */
     val ownedSpecialization: List<Specialization>
+        get() = ownedRelationship.filterIsInstance<Specialization>().filter { it.specific === this }
 
     /**
-     * The ownedRelationships of this Type that are Unionings, having the Type as their typeUnioned.
+     * The [ownedRelationships][ownedRelationship] of this Type that are [Unionings][Unioning], having the `Type` as
+     * their [typeUnioned][Unioning.typeUnioned].
      * 
      * `/ownedUnioning : Unioning [0..*] {subsets ownedRelationship, sourceRelationship, ordered}`
+     *
+     * ownedUnioning = ownedRelationship->selectByKind(Unioning)
      */
     val ownedUnioning: List<Unioning>
+        get() = ownedRelationship.filterIsInstance<Unioning>()
 
     /**
      * The interpretations of a Type with unioningTypes are asserted to be the same as those of all the unioningTypes
@@ -262,8 +346,11 @@ interface Type : Namespace {
      * people's children might be the union of features dividing them in the same ways as people in general.
      * 
      * `/unioningType : Type [0..*] {ordered}`
+     *
+     * unioningType = ownedUnioning.unioningType
      */
     val unioningType: List<Type>
+        get() = ownedUnioning.unioningType
 
     /**
      * If the memberElement of the given membership is a Feature, then return all Features directly or indirectly
@@ -329,7 +416,7 @@ interface Type : Namespace {
         val excludedSelf = buildSet { addAll(excluded); add(this@Type) }
         val directions = supertypes(false).minus(excludedSelf).directionOfExcluding(feature, excludedSelf)
         return when (val direction = directions.firstOrNull()) {
-            else if isConjugated -> direction
+            else if !isConjugated -> direction
             IN -> OUT
             OUT -> IN
             else -> direction
@@ -359,10 +446,9 @@ interface Type : Namespace {
     }
 
     /**
-     *
-     * Return all the non-private [Memberships][Membership] of all the supertypes of this `Type`, excluding any supertypes that are this
-     * `Type` or are in the given set of [excludedTypes]. If [excludeImplied]` = true`, then also transitively exclude any
-     * supertypes from implied [Specializations][Specialization].
+     * Return all the non-private [Memberships][Membership] of all the supertypes of this `Type`, excluding any
+     * supertypes that are this `Type` or are in the given set of [excludedTypes]. If [excludeImplied]` = true`, then
+     * also transitively exclude any supertypes from implied [Specializations][Specialization].
      *
      * ```ocl
      * inheritableMemberships(excludedNamespaces : Namespace [0..*], excludedTypes : Type [0..*], excludeImplied :
@@ -396,10 +482,10 @@ interface Type : Namespace {
      * ```
      */
     fun inheritedMemberships(
-        excludedNamespaces: Collection<Namespace> = emptySet(),
+        excludedNamespaces: Collection<Namespace>,
         excludedTypes: Collection<Type> = emptySet(),
         excludeImplied: Boolean = false
-    ): Collection<Membership> =
+    ): List<Membership> =
         removeRedefinedFeatures(inheritableMemberships(excludedNamespaces, excludedTypes, excludeImplied))
 
     /**
@@ -430,8 +516,12 @@ interface Type : Namespace {
     fun multiplicities(): Collection<Multiplicity> = if (multiplicity != null) {
         setOf(multiplicity!!)
     } else {
-        ownedSpecialization.general.flatMap { t ->
-            if (t.multiplicity != null) emptySet() else t.ownedSpecialization.general.multiplicity.filterNotNull()
+        ownedSpecialization.general.flatMap {
+            if (it.multiplicity != null) {
+                emptySet()
+            } else {
+                it.ownedSpecialization.general.multiplicity.filterNotNull().toSet()
+            }
         }
     }
 
@@ -491,7 +581,7 @@ interface Type : Namespace {
      *     exists(feature | redefinedFeatures->includes(feature)))
      * ```
      */
-    fun removeRedefinedFeatures(memberships: Collection<Membership>): Collection<Membership> {
+    fun removeRedefinedFeatures(memberships: Collection<Membership>): List<Membership> {
         val reducedMemberships = memberships.toSet().let { memberships ->
             memberships.filter { mem1 ->
                 memberships.minus(mem1).any { mem2 -> mem1.memberElement in allRedefinedFeaturesOf(mem2) }
@@ -515,7 +605,7 @@ interface Type : Namespace {
      * ```
      */
     fun specializes(supertype: Type): Boolean = if (isConjugated) {
-        ownedConjugator!!.originalType.specializes(supertype)
+        requireNotNull(ownedConjugator).originalType.specializes(supertype)
     } else {
         supertype in allSupertypes()
     }
@@ -558,10 +648,8 @@ interface Type : Namespace {
         includeAll: Boolean
     ): Collection<Membership> = buildSet {
         addAll(super.visibleMemberships(excluded, isRecursive, includeAll))
-        addAll(
-            inheritedMemberships(excluded.plus(this@Type), excludeImplied = isRecursive)
-                .filter { includeAll || it.visibility == PUBLIC }
-        )
+        inheritedMemberships(excluded.plus(this@Type), excludeImplied = isRecursive)
+            .filterTo(this) { includeAll || it.visibility == PUBLIC }
     }
 }
 
@@ -574,89 +662,6 @@ A Type must directly or indirectly specialize Base::Anything from the Kernel Sem
 specializesFromLibrary('Base::Anything')
 
 
-
-deriveTypeFeatureMembership
-The featureMemberships of a Type is the union of the ownedFeatureMemberships and those
-inheritedMemberships that are FeatureMemberships.
-featureMembership = ownedFeatureMembership->union(
-inheritedMembership->selectByKind(FeatureMembership))
-
-deriveTypeInheritedFeature
-The inheritedFeatures of this Type are the memberFeatures of the inheritedMemberships that are
-FeatureMemberships.
-inheritedFeature = inheritedMemberships->
-selectByKind(FeatureMembership).memberFeature
-
-deriveTypeInheritedMembership
-The inheritedMemberships of a Type are determined by the inheritedMemberships()
-operation.
-inheritedMembership = inheritedMemberships(Set{}, Set{}, false)
-
-deriveTypeInput
-The inputs of a Type are those of its features that have a direction of in or inout relative to the Type, taking
-conjugation into account.
-input = feature->select(f |
-let direction: FeatureDirectionKind = directionOf(f) in
-direction = FeatureDirectionKind::_'in' or
-direction = FeatureDirectionKind::inout)
-
-deriveTypeIntersectingType
-The intersectingTypes of a Type are the intersectingTypes of its ownedIntersectings.
-intersectingType = ownedIntersecting.intersectingType
-
-deriveTypeMultiplicity
-If a Type has an owned Multiplicity, then that is its multiplicity. Otherwise, if the Type has an
-ownedSpecialization, then its multiplicity is the multiplicity of the general Type of that
-Specialization.
-multiplicity =
-let ownedMultiplicities: Sequence(Multiplicity) =
-ownedMember->selectByKind(Multiplicity) in
-if ownedMultiplicities->isEmpty() then null
-else ownedMultiplicities->first()
-endif
-
-deriveTypeOutput
-The outputs of a Type are those of its features that have a direction of out or inout relative to the Type, taking
-conjugation into account.
-output = feature->select(f |
-let direction: FeatureDirectionKind = directionOf(f) in
-direction = FeatureDirectionKind::out or
-direction = FeatureDirectionKind::inout)
-
-deriveTypeOwnedConjugator
-The ownedConjugator of a Type is the its single ownedRelationship that is a Conjugation.
-ownedConjugator =
-let ownedConjugators: Sequence(Conjugator) =
-ownedRelationship->selectByKind(Conjugation) in
-if ownedConjugators->isEmpty() then null
-else ownedConjugators->at(1) endif
-
-deriveTypeOwnedDifferencing
-The ownedDifferencings of a Type are its ownedRelationships that are Differencings.
-ownedDifferencing =
-ownedRelationship->selectByKind(Differencing)
-
-deriveTypeOwnedDisjoining
-The ownedDisjoinings of a Type are the ownedRelationships that are Disjoinings.
-ownedDisjoining =
-ownedRelationship->selectByKind(Disjoining)
-
-deriveTypeOwnedEndFeature
-The ownedEndFeatures of a Type are all its ownedFeatures for which isEnd = true.
-ownedEndFeature = ownedFeature->select(isEnd)
-
-deriveTypeOwnedFeature
-The ownedFeatures of a Type are the ownedMemberFeatures of its ownedFeatureMemberships
-ownedFeature = ownedFeatureMembership.ownedMemberFeature
-
-deriveTypeOwnedFeatureMembership
-The ownedFeatureMemberships of a Type are its ownedMemberships that are FeatureMemberships.
-ownedFeatureMembership = ownedRelationship->selectByKind(FeatureMembership)
-
-deriveTypeOwnedIntersecting
-The ownedIntersectings of a Type are the ownedRelationships that are Intersectings.
-ownedRelationship->selectByKind(Intersecting)
-
 deriveTypeOwnedSpecialization
 The ownedSpecializations of a Type are the ownedRelationships that are Specializations whose
 special Type is the owning Type.
@@ -665,12 +670,11 @@ select(s | s.special = self)
 
 deriveTypeOwnedUnioning
 The ownedUnionings of a Type are the ownedRelationships that are Unionings.
-ownedUnioning =
-ownedRelationship->selectByKind(Unioning)
+
 
 deriveTypeUnioningType
 The unioningTypes of a Type are the unioningTypes of its ownedUnionings.
-unioningType = ownedUnioning.unioningType
+
 
 validateTypeAtMostOneConjugator
 A Type must have at most one owned Conjugation Relationship.

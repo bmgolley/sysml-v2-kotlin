@@ -4,18 +4,18 @@ import sandbox.kerml.root.elements.Element
 import sandbox.kerml.root.elements.Relationship
 
 /**
- * A Membership is a Relationship between a Namespace and an Element that indicates the Element is a
- * member of (i.e., is contained in) the Namespace. Any memberNames specify how the memberElement is identified
- * in the Namespace and the visibility specifies whether or not the memberElement is publicly visible from
+ * A `Membership` is a [Relationship] between a [Namespace] and an [Element] that indicates the Element is a
+ * member of (i.e., is contained in) the [Namespace]. Any memberNames specify how the [memberElement] is identified
+ * in the Namespace and the visibility specifies whether or not the [memberElement] is publicly visible from
  * outside the Namespace.
- * If a Membership is an OwningMembership, then it owns its memberElement, which becomes an ownedMember
- * of the membershipOwningNamespace. Otherwise, the memberNames of a Membership are effectively aliases
- * within the membershipOwningNamespace for an Element with a separate OwningMembership in the same or a
- * different Namespace.
+ * If a `Membership` is an [OwningMembership], then it owns its [memberElement], which becomes an ownedMember
+ * of the [membershipOwningNamespace]. Otherwise, the memberNames of a `Membership` are effectively aliases
+ * within the [membershipOwningNamespace] for an [Element] with a separate [OwningMembership] in the same or a
+ * different [Namespace].
  */
 interface Membership : Relationship {
     /**
-     * The Element that becomes a member of the membershipOwningNamespace due to this Membership.
+     * The [Element] that becomes a member of the [membershipOwningNamespace] due to this Membership.
      * 
      * memberElement : Element {redefines target}
      */
@@ -26,12 +26,12 @@ interface Membership : Relationship {
 
     /**
      * The elementId of the memberElement.
+     *
+     * ```ocl
      * /memberElementId : String
      * 
-     * Constraint:
-     * - deriveMembershipMemberElementId
-     *     The memberElementId of a Membership is the elementId of its memberElement.
-     *     memberElementId = memberElement.elementId
+     * memberElementId = memberElement.elementId
+     * ```
      */
     val memberElementId: String
         get() = memberElement.elementId

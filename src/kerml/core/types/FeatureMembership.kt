@@ -14,10 +14,12 @@ snapshots of the owningType, which must specialize the Kernel Semantic Library b
  */
 interface FeatureMembership : OwningMembership {
     /**
-     * The Feature that this FeatureMembership relates to its owningType, making it an ownedFeature of the
-     * owningType.
+     * The [Feature] that this `FeatureMembership` relates to its [owningType], making it an
+     * [ownedFeature][Type.ownedFeature] of the [owningType].
      * 
+     * ```ocl
      * /ownedMemberFeature : Feature {redefines ownedMemberElement}
+     * ```
      */
     val ownedMemberFeature: Feature
 
@@ -25,7 +27,7 @@ interface FeatureMembership : OwningMembership {
         get() = ownedMemberFeature
 
     /**
-     * /owningType : Type {subsets type, redefines membershipOwningNamespace}
+     * ```/owningType : Type {subsets type, redefines membershipOwningNamespace}```
      */
     val owningType: Type
 

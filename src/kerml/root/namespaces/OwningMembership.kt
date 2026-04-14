@@ -6,13 +6,13 @@ import sandbox.kerml.root.elements.Element
 import sandbox.kerml.root.elements.Relationship
 
 /**
- * An OwningMembership is a Membership that owns its memberElement as a ownedRelatedElement. The
- * ownedMemberElement becomes an ownedMember of the membershipOwningNamespace.
+ * An OwningMembership is a `Membership` that owns its memberElement as a ownedRelatedElement. The
+ * ownedMemberElement becomes an ownedMember of the [membershipOwningNamespace].
  */
 interface OwningMembership : Membership {
     /**
-     * The Element that becomes an ownedMember of the membershipOwningNamespace due to this
-     * OwningMembership.
+     * The [Element] that becomes an ownedMember of the membershipOwningNamespace due to this
+     * `OwningMembership`.
      * 
      * /ownedMemberElement : Element {subsets ownedRelatedElement, redefines memberElement}
      */
