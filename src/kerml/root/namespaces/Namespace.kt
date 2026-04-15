@@ -1,6 +1,8 @@
 package sandbox.kerml.root.namespaces
 
 import sandbox.kerml.root.elements.Element
+import sandbox.util.Validator
+import sandbox.util.implies
 
 /**
  * 
@@ -295,9 +297,12 @@ interface Namespace : Element {
                 .flatMap { it.visibleMemberships(excludedSelf, true, includeAll) })
         }
     }
-    
+
     object Validation : Validator<Namespace> {
-        override fun Namespace.validate() = validateNamespaceDistinguishibility() && Element.Validation.validate(this)
+        override val rules = buildList {
+            addAll(Element.Validation.rules)
+            add(::validateNamespaceDistinguishibility)
+        }
 
         /**
          * All memberships of a Namespace must be distinguishable from each other.
@@ -305,9 +310,11 @@ interface Namespace : Element {
          * membership->forAll(m2 |
          * m1 <> m2 implies m1.isDistinguishableFrom(m2)))
          */
-        fun Namespace.validateNamespaceDistinguishibility() = membership.all { m1 ->
-            membership.all { m2 ->
-                (m1 != m2) implies m1.isDistinguishableFrom(m2)
+        fun validateNamespaceDistinguishibility(namespace: Namespace) = with(namespace) {
+            membership.all { m1 ->
+                membership.all { m2 ->
+                    (m1 != m2) implies m1.isDistinguishableFrom(m2)
+                }
             }
         }
     }

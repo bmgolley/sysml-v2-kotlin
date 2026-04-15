@@ -5,6 +5,10 @@ package sandbox.kerml.core.types
 import sandbox.kerml.root.elements.Element
 import sandbox.kerml.root.elements.Relationship
 
+/**
+ * `Unioning` is a [Relationship] that makes its [unioningType] one of the [unioningTypes][Type.unioningType] of its
+ * [typeUnioned].
+ */
 interface Unioning : Relationship {
     /**
      * [Type] with interpretations partly determined by [unioningType], as described in [Type.unioningType].
