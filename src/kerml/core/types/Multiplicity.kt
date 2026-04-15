@@ -3,7 +3,7 @@ package sandbox.kerml.core.types
 import sandbox.kerml.core.features.Feature
 
 /**
- * A Multiplicity is a Feature whose co-domain is a set of natural numbers giving the allowed cardinalities of
+ * A `Multiplicity` is a [Feature] whose co-domain is a set of natural numbers giving the allowed cardinalities of
  * each typeWithMultiplicity. The cardinality of a Type is defined as follows, depending on whether the Type is
  * a Classifier or Feature.
  * 
@@ -13,7 +13,7 @@ import sandbox.kerml.core.features.Feature
  *     Classifier as its featuringType, this is the number of values of Feature for each basic instance of
  *     the Classifier. Note that, for non-unique Features, all duplicate values are included in this count.
  * 
- * Multiplicity co-domains (in models) can be specified by Expression that might vary in their results. If the
+ * `Multiplicity` co-domains (in models) can be specified by Expression that might vary in their results. If the
  * typeWithMultiplicity is a Classifier, the domain of the Multiplicity shall be Base::Anything. If the
  * typeWithMultiplicity is a Feature, the Multiplicity shall have the same domain as the
  * typeWithMultiplicity.

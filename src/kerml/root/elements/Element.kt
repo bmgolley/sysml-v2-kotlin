@@ -7,56 +7,65 @@ import sandbox.kerml.root.annotations.Documentation
 import sandbox.kerml.root.annotations.TextualRepresentation
 import sandbox.kerml.root.namespaces.Namespace
 import sandbox.kerml.root.namespaces.OwningMembership
+import sandbox.util.Validator
+import sandbox.util.implies
 
 /**
- * An Element is a constituent of a model that is uniquely identified relative to all other Elements. It can have
- * Relationships with other Elements. Some of these Relationships might imply ownership of other
- * Elements, which means that if an Element is deleted from a model, then so are all the Elements that it owns.
+ * An `Element` is a constituent of a model that is uniquely identified relative to all other `Elements`. It can have
+ * [Relationships][Relationship] with other Elements. Some of these [Relationships][Relationship] might imply ownership
+ * of other `Elements`, which means that if an `Element` is deleted from a model, then so are all the `Elements` that it
+ * owns.
  */
 interface Element {
     /**
-     * Various alternative identifiers for this Element. Generally, these will be set by tools.
+     * Various alternative identifiers for this `Element`. Generally, these will be set by tools.
      * 
+     * ```ocl
      * aliasIds : String [0..*] {ordered}
+     * ```
      */
     val aliasIds: List<String>
 
     /**
-     * The declared name of this Element.
+     * The declared name of this `Element`.
      * 
+     * ```ocl
      * declaredName : String [0..1]
+     * ```
      */
     var declaredName: String?
 
     /**
-     * An optional alternative name for the Element that is intended to be shorter or in some way more succinct than its
-     * primary name. It may act as a modeler-specified identifier for the Element, though it is then the responsibility of
-     * the modeler to maintain the uniqueness of this identifier within a model or relative to some other context.
+     * An optional alternative name for the `Element` that is intended to be shorter or in some way more succinct than
+     * its primary [name]. It may act as a modeler-specified identifier for the Element, though it is then the
+     * responsibility of the modeler to maintain the uniqueness of this identifier within a model or relative to some
+     * other context.
      * 
+     * ```ocl
      * declaredShortName : String [0..1]
+     * ```
      */
     var declaredShortName: String?
 
     /**
      * The [Documentation] owned by this Element.
      * 
+     * ```ocl
      * /documentation : Documentation [0..*] {subsets ownedElement, annotatingElement, ordered}
-     * 
-     * Constraints
-     * - deriveElementDocumentation
-     *     The documentation of an Element is its ownedElements that are Documentation.
-     *     ```ocl
-     *     documentation = ownedElement->selectByKind(Documentation)
-     *     ```
+     *
+     * documentation = ownedElement->selectByKind(Documentation)
+     * ```
      */
     val documentation: List<Documentation>
         get() = ownedElement.filterIsInstance<Documentation>()
 
     /**
-     * The globally unique identifier for this Element. This is intended to be set by tooling, and it must not change during
-     * the lifetime of the Element.
-     * 
+     * The globally unique identifier for this `Element`. This is intended to be set by tooling, and it must not change
+     * during the lifetime of the Element.
+     *
+     * ```ocl
      * elementId : String
+     * ```
      */
     val elementId: String
 
@@ -334,15 +343,11 @@ interface Element {
      * endif endif
      * ```
      */
-    fun path(): String = qualifiedName
-        ?: owningRelationship?.let {
-            "${it.path()}/${it.ownedRelatedElement.indexOf(this)}"
-        }.orEmpty()
-    
+    fun path(): String =
+        qualifiedName ?: owningRelationship?.let { "${it.path()}/${it.ownedRelatedElement.indexOf(this)}" }.orEmpty()
+
     object Validation : Validator<Element> {
-        override fun Element.validate() = mapOf(
-            this@Validation::validateElementIsImpliedIncluded to validateElementIsImpliedIncluded()
-        )
+        override val rules = listOf(Validation::validateElementIsImpliedIncluded)
 
         /**
          * If an Element has any ownedRelationships for which isImplied = true, then the Element must also have
@@ -353,7 +358,9 @@ interface Element {
          * ownedRelationship->exists(isImplied) implies isImpliedIncluded
          * ```
          */
-        fun Element.validateElementIsImpliedIncluded() = ownedRelationship.any(Relationship::isImplied) implies isImpliedIncluded
+        fun validateElementIsImpliedIncluded(element: Element) = with(element) {
+            ownedRelationship.any(Relationship::isImplied) implies isImpliedIncluded
+        }
     }
 }
 /*

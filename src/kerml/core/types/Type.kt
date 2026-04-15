@@ -18,6 +18,7 @@ import sandbox.kerml.root.elements.Element
 import sandbox.kerml.root.namespaces.Membership
 import sandbox.kerml.root.namespaces.Namespace
 import sandbox.kerml.root.namespaces.Import
+import sandbox.util.Validator
 
 /**
  * A `Type` is a [Namespace] that is the most general kind of [Element] supporting the semantics of classification. A
@@ -651,10 +652,10 @@ interface Type : Namespace {
         inheritedMemberships(excluded.plus(this@Type), excludeImplied = isRecursive)
             .filterTo(this) { includeAll || it.visibility == PUBLIC }
     }
-    
+
     object Validation : Validator<Type> {
         override val rules = buildList {
-            addAll(Type.Validation.rules)
+            addAll(Namespace.Validation.rules)
             add(::validateTypeAtMostOneConjugator)
             add(::validateTypeDifferencingTypesNotSelf)
             add(::validateTypeIntersectingTypesNotSelf)
@@ -672,8 +673,9 @@ interface Type : Namespace {
          * ownedRelationship->selectByKind(Conjugation)->size() <= 1
          * ```
          */
-        fun Type.validateTypeAtMostOneConjugator(): Boolean = ownedRelationship.count(Conjugation::isInstance) <= 1
-        
+        fun validateTypeAtMostOneConjugator(type: Type): Boolean =
+            type.ownedRelationship.count(Conjugation::class::isInstance) <= 1
+
         /**
          * A Type cannot be one of its own differencingTypes.
          * 
@@ -681,8 +683,8 @@ interface Type : Namespace {
          * differencingType->excludes(self)
          * ```
          */
-        fun Type.validateTypeDifferencingTypesNotSelf(): Boolean = this !in differencingType
-        
+        fun validateTypeDifferencingTypesNotSelf(type: Type): Boolean = with(type) { this !in differencingType }
+
         /**
          * A Type cannot be one of its own intersectingTypes.
          * 
@@ -690,8 +692,8 @@ interface Type : Namespace {
          * intersectingType->excludes(self)
          * ```
          */
-        fun Type.validateTypeIntersectingTypesNotSelf(): Boolean = this !in intersectingType
-        
+        fun validateTypeIntersectingTypesNotSelf(type: Type): Boolean = with(type) { this !in intersectingType }
+
         /**
          * A Type must not have exactly one ownedDifferencing.
          * 
@@ -699,8 +701,8 @@ interface Type : Namespace {
          * ownedDifferencing->size() <> 1
          * ```
          */
-        fun Type.validateTypeOwnedDifferencingNotOne(): Boolean = ownedDifferencing.size != 1
-        
+        fun validateTypeOwnedDifferencingNotOne(type: Type): Boolean = type.ownedDifferencing.size != 1
+
         /**
          * A Type must not have exactly one ownedIntersecting.
          * 
@@ -708,8 +710,8 @@ interface Type : Namespace {
          * ownedIntersecting->size() <> 1
          * ```
          */
-        fun Type.validateTypeOwnedIntersectingNotOne(): Boolean = ownedIntersecting.size != 1
-        
+        fun validateTypeOwnedIntersectingNotOne(type: Type): Boolean = type.ownedIntersecting.size != 1
+
         /**
          * A Type may have at most one ownedMember that is a Multiplicity.
          * 
@@ -717,8 +719,10 @@ interface Type : Namespace {
          * ownedMember->selectByKind(Multiplicity)->size() <= 1
          * ```
          */
-        fun Type.validateTypeOwnedMultiplicity(): Boolean = ownedMember.count(Multiplicity::isInstance) <= 1
-        
+        fun validateTypeOwnedMultiplicity(type: Type): Boolean =
+            type.ownedMember.count(Multiplicity::class::isInstance) <= 1
+
+
         /**
          * A Type must not have exactly one ownedUnioning.
          * 
@@ -726,8 +730,8 @@ interface Type : Namespace {
          * ownedUnioning->size() <> 1
          * ```
          */
-        fun Type.validateTypeOwnedUnioningNotOne(): Boolean = ownedUnioning.size != 1
-        
+        fun validateTypeOwnedUnioningNotOne(type: Type): Boolean = type.ownedUnioning.size != 1
+
         /**
          * A Type cannot be one of its own unioningTypes.
          * 
@@ -735,7 +739,7 @@ interface Type : Namespace {
          * unioningType->excludes(self)
          * ```
          */
-        fun Type.validateTypeUnioningTypesNotSelf(): Boolean = this !in unioningType
+        fun validateTypeUnioningTypesNotSelf(type: Type): Boolean = with(type) { this !in unioningType }
     }
 }
 
