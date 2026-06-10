@@ -46,7 +46,9 @@ interface Classifier : Type {
          * ```
          */
         fun validateClassifierMultiplicityDomain(classifier: Classifier): Boolean = with(classifier) {
-            (multiplicity != null) implies multiplicity!!.featuringType.isEmpty()
+            multiplicity.let { multiplicity ->
+                (multiplicity != null) implies { multiplicity.featuringType.isEmpty() }
+            }
         }
     }
 }
