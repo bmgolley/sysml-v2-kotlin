@@ -2,7 +2,7 @@
 
 package sandbox.util
 
-import sandbox.kerml.root.elements.Element
+import sandbox.kerml.root.Element
 
 interface Validator<T : Element> {
     val rules: List<ValidationRule<T>>

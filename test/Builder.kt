@@ -1,4 +1,8 @@
-import sandbox.kerml.root.namespaces.Namespace
+import sandbox.kerml.root.Namespace
+import sandbox.sysml.system.AttributeDefinition
+import sandbox.sysml.system.AttributeUsage
+import sandbox.sysml.system.PartDefinition
+import sandbox.sysml.system.PartUsage
 
 @ElementMarker
 interface ElementBuilder<T : Element> {

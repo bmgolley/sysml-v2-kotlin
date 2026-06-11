@@ -1,0 +1,36 @@
+@file:Suppress("unused")
+
+package sandbox.kerml.core
+
+import sandbox.kerml.root.Element
+import sandbox.kerml.root.Relationship
+
+/**
+ * `Unioning` is a [Relationship] that makes its [unioningType] one of the [unioningTypes][Type.unioningType] of its
+ * [typeUnioned].
+ */
+interface Unioning : Relationship {
+    /**
+     * [Type] with interpretations partly determined by [unioningType], as described in [Type.unioningType].
+     *
+     * ```ocl
+     * /typeUnioned : Type {subsets owningRelatedElement, redefines source}
+     * ```
+     */
+    val typeUnioned: Type
+
+    override val source: List<Element>
+        get() = listOf(typeUnioned)
+
+    /**
+     * `Type` that partly determines interpretations of [typeUnioned], as described in [Type.unioningType].
+     *
+     * ```ocl
+     * unioningType : Type {redefines target}
+     * ```
+     */
+    var unioningType: Type
+
+    override val target: List<Element>
+        get() = listOf(unioningType)
+}
