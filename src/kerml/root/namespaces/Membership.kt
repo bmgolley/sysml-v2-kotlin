@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package sandbox.kerml.root.namespaces
 
 import sandbox.kerml.root.elements.Element

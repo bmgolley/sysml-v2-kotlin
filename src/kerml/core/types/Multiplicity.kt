@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package sandbox.kerml.core.types
 
 import sandbox.kerml.core.features.Feature

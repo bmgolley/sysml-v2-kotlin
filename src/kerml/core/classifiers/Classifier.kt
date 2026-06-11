@@ -4,7 +4,6 @@ package sandbox.kerml.core.classifiers
 
 import sandbox.kerml.core.types.Type
 import sandbox.util.Validator
-import sandbox.util.implies
 
 /**
  * A `Classifier` is a [Type] that classifies:
@@ -46,9 +45,7 @@ interface Classifier : Type {
          * ```
          */
         fun validateClassifierMultiplicityDomain(classifier: Classifier): Boolean = with(classifier) {
-            multiplicity.let { multiplicity ->
-                (multiplicity != null) implies { multiplicity.featuringType.isEmpty() }
-            }
+            multiplicity?.featuringType?.isEmpty() ?: true
         }
     }
 }

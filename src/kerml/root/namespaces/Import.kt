@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package sandbox.kerml.root.namespaces
 
 import sandbox.kerml.root.elements.Element
@@ -68,5 +70,5 @@ interface Import : Relationship {
      * 
      * importedMemberships(excluded : Namespace [0..*]) : Membership [0..*]
      */
-    fun importedMemberships(excluded: Collection<Namespace> = emptySet()): List<Membership>
+    fun importedMemberships(excluded: Collection<Namespace> = emptySet()): Collection<Membership>
 }

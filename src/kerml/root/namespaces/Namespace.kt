@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package sandbox.kerml.root.namespaces
 
 import sandbox.kerml.root.elements.Element
@@ -16,17 +18,18 @@ import sandbox.util.implies
  * same Element may be the memberElement of multiple Memberships in a Namespace (though it may be owned
  * at most once), each of which may define a separate alias for the Element relative to the Namespace.
  */
-@Suppress("unused")
 interface Namespace : Element {
     /**
      * The Memberships in this Namespace that result from the ownedImports of this Namespace.
      * 
+     * ```
      * /importedMembership : Membership [0..*] {subsets membership, ordered}
      * Constraints:
      * deriveNamespaceImportedMembership
      * The importedMemberships of a Namespace are derived using the importedMemberships() operation, with no
      * initially excluded Namespaces.
      * importedMembership = importedMemberships(Set{})
+     * ```
      */
     val importedMembership: List<Membership>
         get() = importedMemberships()
@@ -35,10 +38,12 @@ interface Namespace : Element {
      * The set of all member Elements of this Namespace, which are the memberElements of all memberships of the
      * Namespace.
      * 
+     * ```
      * /member : Element [0..*] {ordered}
      * deriveNamespaceMembers
      * The members of a Namespace are the memberElements of all its memberships.
      * member = membership.memberElement
+     * ```
      */
     val member: List<Element>
         get() = membership.map(Membership::memberElement)
@@ -47,7 +52,9 @@ interface Namespace : Element {
      * All Memberships in this Namespace, including (at least) the union of ownedMemberships and
      * importedMemberships.
      * 
+     * ```
      * /membership : Membership [0..*] {ordered, union}
+     * ```
      */
     val membership: List<Membership>
         get() = ownedMembership + importedMembership
@@ -56,10 +63,12 @@ interface Namespace : Element {
      * The ownedRelationships of this Namespace that are Imports, for which the Namespace is the
      * importOwningNamespace.
      * 
+     * ```
      * /ownedImport : Import [0..*] {subsets sourceRelationship, ownedRelationship, ordered}
      * deriveNamespaceOwnedImport
      * The ownedImports of a Namespace are all its ownedRelationships that are Imports.
      * ownedImport = ownedRelationship->selectByKind(Import)
+     * ```
      */
     val ownedImport: List<Import>
         get() = ownedRelationship.filterIsInstance<Import>()
@@ -81,10 +90,12 @@ interface Namespace : Element {
      * The ownedRelationships of this Namespace that are Memberships, for which the Namespace is the
      * membershipOwningNamespace.
      * 
+     * ```
      * /ownedMembership : Membership [0..*] {subsets membership, sourceRelationship, ownedRelationship, ordered}
      * deriveNamespaceOwnedMembership
      * The ownedMemberships of a Namespace are all its ownedRelationships that are Memberships.
      * ownedMembership = ownedRelationship->selectByKind(Membership)
+     * ```
      */
     val ownedMembership: List<Membership>
         get() = ownedRelationship.filterIsInstance<Membership>()
@@ -94,8 +105,10 @@ interface Namespace : Element {
      * excluding those Imports whose importOwningNamespace is in the excluded set, and excluding Memberships
      * that have distinguisibility collisions with each other or with any ownedMembership.
      * 
+     * ```
      * importedMemberships(excluded : Namespace [0..*]) : Membership [0..*]
      * body: ownedImport.importedMemberships(excluded->including(self))
+     * ```
      */
     fun importedMemberships(excluded: Collection<Namespace> = emptySet()): List<Membership> {
         val excludedSelf = buildSet { add(this@Namespace); addAll(excluded) }
@@ -103,17 +116,19 @@ interface Namespace : Element {
     }
 
     /**
-     * If [visibility] is not `null`, return the [Memberships][Membership] of this `Namespace` with the given [Membership.visibility], including
+     * If [visibility] is not `null`, return the [Memberships][Membership] of this `Namespace` with the given visibility, including
      * [ownedMemberships][ownedMembership] with the given [Membership.visibility] and [Memberships][Membership] imported with the given [Membership.visibility]. If
      * [visibility] is `null`, return all [ownedMemberships][ownedMembership] and imported [Memberships][Membership] regardless of [Membership.visibility]. When
      * computing imported [Memberships][Membership], ignore this `Namespace` and any `Namespaces` in the given excluded set.
      *
+     * ```
      * membershipsOfVisibility(visibility : VisibilityKind [0..1], excluded : Namespace [0..*]) : Membership [0..*]
      * body: ownedMembership->
      *     select(mem | visibility = null or mem.visibility = visibility)->
      *     union(ownedImport->
      *         select(imp | visibility = null or imp.visibility = visibility).
      *         importedMemberships(excluded->including(self)))
+     * ```
      */
     fun membershipsOfVisibility(
         visibility: VisibilityKind?,
@@ -128,19 +143,22 @@ interface Namespace : Element {
     /**
      * Return the names of the given element as it is known in this Namespace.
      * 
+     * ```
      * namesOf(element : Element) : String [0..*]
      * body: let elementMemberships : Sequence(Membership) =
      *     memberships->select(memberElement = element) in
      * memberships.memberShortName->
      *     union(memberships.memberName)->
      *     asSet()
+     * ```
      */
-    fun namesOf(element: Element): Set<String> {
-        val elementMemberships = membership.filter { it.memberElement == element }
-        return elementMemberships.map(Membership::memberShortName)
-            .plus(elementMemberships.map(Membership::memberName))
-            .filterNotNull()
-            .toSet()
+    fun namesOf(element: Element): Collection<String> = membership.filter {
+        it.memberElement === element
+    }.let {
+        buildSet {
+            addAll(it.mapNotNull(Membership::memberShortName))
+            addAll(it.mapNotNull(Membership::memberName))
+        }
     }
 
     /**
@@ -148,8 +166,10 @@ interface Namespace : Element {
      * qualified name with all the segment names of the given name except the last. If the given qualifiedName has only
      * one segment, then return null.
      * 
+     * ```
      * qualificationOf(qualifiedName : String) : String [0..1]
      * body: No OCL
+     * ```
      */
     fun qualificationOf(qualifiedName: String): String?
 
@@ -158,6 +178,7 @@ interface Namespace : Element {
      * scope. The qualified name string must conform to the concrete syntax of the KerML textual notation. According to
      * the KerML name resolution rules every qualified name will resolve to either a single Membership, or to none.
      * 
+     * ```
      * resolve(qualifiedName : String) : Membership [0..1]
      * body: let qualification : String = qualificationOf(qualifiedName) in
      * let name : String = unqualifiedNameOf(qualifiedName) in
@@ -173,6 +194,7 @@ interface Namespace : Element {
      *         resolveVisible(name)
      *     endif
      * endif endif
+     * ```
      */
     fun resolve(qualifiedName: String): Membership? {
         val name = unqualifiedNameOf(qualifiedName)
@@ -196,7 +218,8 @@ interface Namespace : Element {
     /**
      * Resolve a simple name starting with this Namespace as the local scope, and continuing with containing outer scopes
      * as necessary. However, if this Namespace is a root Namespace, then the resolution is done directly in global scope.
-     * 
+     *
+     * ```
      * resolveLocal(name : String) : Membership [0..1]
      * body: if owningNamespace = null then resolveGlobal(name)
      * else
@@ -206,17 +229,19 @@ interface Namespace : Element {
      *     else owningNamspace.resolveLocal(name)
      *     endif
      * endif
+     * ```
      */
     fun resolveLocal(name: String): Membership? = if (owningNamespace == null) {
         resolveGlobal(name)
     } else {
         membership.firstOrNull { it.memberShortName == name || it.memberName == name }
-            ?: (owningNamespace as Namespace).resolveLocal(name)
+            ?: owningNamespace!!.resolveLocal(name)
     }
 
     /**
      * Resolve a simple name from the visible Memberships of this Namespace.
      * 
+     *```
      * resolveVisible(name : String) : Membership [0..1]
      * body: let memberships : Sequence(Membership) =
      *     visibleMemberships(Set{}, false, false)->
@@ -224,6 +249,7 @@ interface Namespace : Element {
      * if memberships->isEmpty() then null
      * else memberships->first()
      * endif
+     * ```
      */
     fun resolveVisible(name: String): Membership? = visibleMemberships()
         .firstOrNull { it.memberShortName == name || it.memberName == name }
@@ -233,17 +259,19 @@ interface Namespace : Element {
      * form of a KerML unrestricted name, then "unescape" it by removing the surrounding single quotes and replacing all
      * escape sequences with the specified character.
      * 
-     * `unqualifiedNameOf(qualifiedName : String) : String`
+     * ```
+     * unqualifiedNameOf(qualifiedName : String) : String
      * body: No OCL
+     * ```
      */
     fun unqualifiedNameOf(qualifiedName: String): String
 
     /**
      * Returns this visibility of mem relative to this Namespace. If mem is an importedMembership, this is the
      * visibility of its Import. Otherwise it is the visibility of the Membership itself
-     * 
-     * `visibilityOf(mem : Membership) : VisibilityKind`
-     * ```ocl
+     *
+     * ```
+     * visibilityOf(mem : Membership) : VisibilityKind
      * body: if importedMembership->includes(mem) then
      *     ownedImport->
      *         select(importedMemberships(Set{})->includes(mem)).
@@ -293,7 +321,7 @@ interface Namespace : Element {
             val excludedSelf: Set<Namespace> = buildSet { addAll(excluded); add(this@Namespace) }
             (visibleMemberships
                 + ownedMember.filterIsInstance<Namespace>()
-                .filter { includeAll || it.owningMembership?.visibility == VisibilityKind.PUBLIC }
+                .filter { includeAll || it.owningMembership?.visibility == PUBLIC }
                 .flatMap { it.visibleMemberships(excludedSelf, true, includeAll) })
         }
     }

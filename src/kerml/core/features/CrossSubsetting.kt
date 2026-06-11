@@ -25,37 +25,39 @@ interface CrossSubsetting : Subsetting {
      * crossedFeature : Feature {redefines subsettedFeature}
      */
     var crossedFeature: Feature
-    
+
     // override var subsettedFeature: Feature by ::crossedFeature
-    
+
     /**
      * The end Feature that owns this CrossSubsetting relationship and is also its subsettingFeature.
      * 
      * /crossingFeature : Feature {redefines owningFeature, subsettingFeature}
      */
     val crossingFeature: Feature
-    
+
+    /*
     object Validation {
         /**
          * The crossedFeature of a CrossSubsetting must have exactly two chainingFeatures. If the
-crossingFeature of the CrossSubsetting is one of two end Features, then the first chainingFeature
-must be the other end Feature.
-crossingFeature.isEnd and crossingFeature.owningType <> null implies
-let endFeatures: Sequence(Feature) = crossingFeature.owningType.endFeature in
-let chainingFeatures: Sequence(Feature) = crossedFeature.chainingFeature in
-chainingFeatures->size() = 2 and
-endFeatures->size() = 2 implies
-chainingFeatures->at(1) = endFeatures->excluding(crossingFeature)->at(1)
+         * crossingFeature of the CrossSubsetting is one of two end Features, then the first chainingFeature
+         * must be the other end Feature.
+         * crossingFeature.isEnd and crossingFeature.owningType <> null implies
+         * let endFeatures: Sequence(Feature) = crossingFeature.owningType.endFeature in
+         * let chainingFeatures: Sequence(Feature) = crossedFeature.chainingFeature in
+         * chainingFeatures->size() = 2 and
+         * endFeatures->size() = 2 implies
+         * chainingFeatures->at(1) = endFeatures->excluding(crossingFeature)->at(1)
          */
         fun validateCrossSubsettingCrossedFeature()
         
         /**
          * The crossingFeature of a CrossSubsetting must be an end Feature that is owned by a Type with at least
-two end Features.
-crossingFeature.isEnd and
-crossingFeature.owningType<>null and
-crossingFeature.owningType.endFeature ->size() > 1
+         * two end Features.
+         * crossingFeature.isEnd and
+         * crossingFeature.owningType<>null and
+         * crossingFeature.owningType.endFeature ->size() > 1
          */
         fun validateCrossSubsettingCrossingFeature()
     }
+    */
 }

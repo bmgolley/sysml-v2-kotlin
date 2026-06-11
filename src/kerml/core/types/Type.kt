@@ -498,7 +498,7 @@ interface Type : Namespace {
      * body: specializes(otherType)
      * ```
      */
-    infix fun isCompatibleWith(otherType: Type): Boolean = specializes(otherType)
+    fun isCompatibleWith(otherType: Type): Boolean = specializes(otherType)
 
     /**
      * Return the owned or inherited [Multiplicities][Multiplicity] for this `Type`.

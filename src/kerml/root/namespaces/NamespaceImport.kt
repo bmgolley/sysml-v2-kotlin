@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package sandbox.kerml.root.namespaces
 
 import sandbox.kerml.root.elements.Element
@@ -15,10 +17,10 @@ interface NamespaceImport : Import {
      * `importedNamespace : Namespace {redefines target}`
      */
     var importedNamespace: Namespace
-    
+
     override val target: List<Element>
         get() = listOf(importedNamespace)
-    
+
     /**
      * - deriveNamespaceImportImportedElement
      *    The importedElement of a NamespaceImport is its importedNamespace.
@@ -26,7 +28,7 @@ interface NamespaceImport : Import {
      */
     override val importedElement: Namespace
         get() = importedNamespace
-    
+
     /**
      * Returns at least the visible Memberships of the importedNamespace. If isRecursive = true, then
      * Memberships are also recursively imported from any ownedMembers of the importedNamespace that are
@@ -38,9 +40,9 @@ interface NamespaceImport : Import {
      * else importedNamespace.visibleMemberships(excluded, isRecursive, isImportAll)
      * ```
      */
-    override fun importedMemberships(excluded: Collection<Namespace>): List<Membership> =
+    override fun importedMemberships(excluded: Collection<Namespace>): Collection<Membership> =
         if (importedNamespace in excluded) {
-            emptyList()
+            emptySet()
         } else {
             importedNamespace.visibleMemberships(excluded, isRecursive, isImportAll)
         }

@@ -1,12 +1,11 @@
+@file:Suppress("unused")
+
 package sandbox.util
 
-import kotlin.contracts.ExperimentalContracts
-import kotlin.contracts.ExperimentalExtendedContracts
 import kotlin.contracts.contract
 
 infix fun Boolean.implies(other: Boolean): Boolean = !this || other
 
-@OptIn(ExperimentalContracts::class, ExperimentalExtendedContracts::class)
 infix fun Boolean.implies(other: () -> Boolean): Boolean {
     contract {
         callsInPlace(other, AT_MOST_ONCE)
@@ -14,3 +13,6 @@ infix fun Boolean.implies(other: () -> Boolean): Boolean {
     }
     return !this || other()
 }
+
+inline fun <reified R> Iterable<*>.firstIsInstance(): R = first { it is R } as R
+inline fun <reified R> Iterable<*>.firstIsInstanceOrNull(): R? = firstOrNull { it is R } as R?

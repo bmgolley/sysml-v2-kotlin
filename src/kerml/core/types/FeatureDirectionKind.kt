@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package sandbox.kerml.core.types
 
 import sandbox.kerml.core.features.Feature
@@ -22,7 +24,7 @@ enum class FeatureDirectionKind(val text: String) {
      * Values of the [Feature] on each instance of its domain are determined internally to that instance and used
      * externally.
      */
-    OUT("out");
+    OUT("out"),
 
-    override fun toString(): String = "$name = $text"
+//    override fun toString(): String = "$name = $text"
 }

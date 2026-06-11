@@ -1,14 +1,15 @@
+@file:Suppress("unused")
+
 package sandbox.kerml.root.namespaces
 
 import sandbox.kerml.root.elements.Element
 
 /**
  * 
-A MembershipImport is an Import that imports its importedMembership into the importOwningNamespace.
+ * A MembershipImport is an Import that imports its importedMembership into the importOwningNamespace.
  * If isRecursive = true and the memberElement of the importedMembership is a Namespace, then the
  * equivalent of a recursive NamespaceImport is also performed on that Namespace.
  */
-@Suppress("unused")
 interface MembershipImport : Import {
     /**
      * The Membership to be imported.

@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package sandbox.kerml.root.annotations
 
 import sandbox.kerml.root.elements.Element
@@ -11,11 +13,12 @@ import sandbox.kerml.root.elements.Element
  * If the named language of a TextualRepresentation is machine-parsable, then the body text should be legal
  * input text as defined for that language. The interpretation of the named language string shall be case insensitive.
  * The following language names are defined to correspond to the given standard languages:
- * | ---------------------------------- |
+ *
+ * | Name  | Language                   |
+ * | ----- | -------------------------- |
  * | kerml | Kernel Modeling Language   |
  * |  ocl  | Object Constraint Language |
  * |  alf  | Action Language for fUML   |
- * | ---------------------------------- |
  * 
  * Other specifications may define specific language strings, other than those shown above, to be used to indicate the
  * use of languages from those specifications in KerML TextualRepresentation.
@@ -31,26 +34,25 @@ import sandbox.kerml.root.elements.Element
  * "opaque" Element specified in the other language. However, a conforming KerML tool may interpret such an
  * element consistently with the specification of the named language.
  */
-@Suppress("unused")
 interface TextualRepresentation : AnnotatingElement {
     /**
      * The textual representation of the representedElement in the given language.
      * 
-     * body : String
+     * `body : String`
      */
     var body: String
 
     /**
      * The natural or artifical language in which the body text is written.
      * 
-     * language : String
+     * `language : String`
      */
     var language: String
 
     /**
      * The Element that is represented by this TextualRepresentation.
      * 
-     * /representedElement : Element {subsets owner, redefines annotatedElement}
+     * `/representedElement : Element {subsets owner, redefines annotatedElement}`
      */
     val representedElement: Element
         get() = checkNotNull(owner)

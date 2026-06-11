@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package sandbox.kerml.root.annotations
 
 import sandbox.kerml.root.elements.Element
@@ -16,7 +18,6 @@ import sandbox.kerml.root.elements.Relationship
  *     must be non-null, but not both.
  *     ownedAnnotatingElement <> null xor owningAnnotatingElement <> null
  */
-@Suppress("unused")
 interface Annotation : Relationship {
     /**
      * The Element that is annotated by the annotatingElement of this Annotation.

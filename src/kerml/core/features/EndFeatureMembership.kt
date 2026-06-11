@@ -2,11 +2,13 @@
 
 package sandbox.kerml.core.features
 
+import sandbox.kerml.core.types.FeatureMembership
+
 /**
  * EndFeatureMembership is a FeatureMembership that requires its memberFeature be owned and have isEnd
  * = true.
  */
-interface EndFeatureMembership: FeatureMembership {
+interface EndFeatureMembership : FeatureMembership {
     override val ownedMemberFeature: Feature
 }
 

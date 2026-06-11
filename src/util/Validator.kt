@@ -3,7 +3,6 @@
 package sandbox.util
 
 import sandbox.kerml.root.elements.Element
-import kotlin.collections.associateWith
 
 interface Validator<T : Element> {
     val rules: List<ValidationRule<T>>

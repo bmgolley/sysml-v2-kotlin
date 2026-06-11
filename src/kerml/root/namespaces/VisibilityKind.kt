@@ -12,7 +12,7 @@ enum class VisibilityKind(val text: String) {
      * Indicates a Membership is not visible outside its owning Namespace.
      */
     PRIVATE("private"),
-    
+
     /**
      * An intermediate level of visibility between public and private. By default, it is equivalent to private for the
      * purposes of normal access to and import of Elements from a Namespace. However, other Relationships may
@@ -20,9 +20,9 @@ enum class VisibilityKind(val text: String) {
      * (e.g., Specialization).
      */
     PROTECTED("protected"),
-    
+
     /**
      * Indicates that a Membership is publicly visible outside its owning Namespace.
      */
-    PUBLIC("public")
+    PUBLIC("public"),
 }

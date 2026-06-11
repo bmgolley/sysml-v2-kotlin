@@ -1,9 +1,10 @@
+@file:Suppress("unused")
+
 package sandbox.kerml.root.annotations
 
 /**
  * A Comment is an AnnotatingElement whose body in some way describes its annotatedElements.
  */
-@Suppress("unused")
 interface Comment : AnnotatingElement {
     /**
      * The annotation text for the Comment.

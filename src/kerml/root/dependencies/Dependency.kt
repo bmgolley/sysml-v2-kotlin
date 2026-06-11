@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package sandbox.kerml.root.dependencies
 
 import sandbox.kerml.root.elements.Element
@@ -9,7 +11,6 @@ import sandbox.kerml.root.elements.Relationship
  * Elements may necessitate a change to, or re-specification of, the client Elements.
  * Note that a Dependency is entirely a model-level Relationship, without instance-level semantics.
  */
-@Suppress("unused")
 interface Dependency : Relationship {
     /**
      * The Element or Elements dependent on the supplier Elements.
