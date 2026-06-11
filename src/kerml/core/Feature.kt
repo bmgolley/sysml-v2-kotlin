@@ -5,6 +5,7 @@ package sandbox.kerml.core
 import sandbox.featurechains.kerml.core.chainingFeature
 import sandbox.featurechains.kerml.core.featuringType
 import sandbox.featurechains.kerml.core.redefinedFeature
+import sandbox.util.firstIsInstanceOrNull
 
 /**
  * A Feature is a Type that classifies relations between multiple things (in the universe). The domain of the relation
@@ -31,7 +32,7 @@ interface Feature : Type {
      * each of those as domain instances to find the values of the second Feature in chainingFeatures, and so on, to
      * values of the last Feature.
      *
-     * ```ocl
+     * ```
      * /chainingFeature : Feature [0..*] {ordered, nonunique}
      * ```
      */
@@ -43,7 +44,7 @@ interface Feature : Type {
      * has one. Semantically, the values of the crossFeature of an end Feature must include all values of the end
      * Feature obtained when navigating from values of the other end Features of the same owningType.
      * 
-     * ```ocl
+     * ```
      * /crossFeature : Feature [0..1]
      * ```
      */
@@ -53,7 +54,7 @@ interface Feature : Type {
     /**
      * Indicates how values of this Feature are determined or used (as specified for the FeatureDirectionKind).
      * 
-     * ```ocl
+     * ```
      * direction : FeatureDirectionKind [0..1]
      * ```
      */
@@ -63,7 +64,7 @@ interface Feature : Type {
      * The Type that is related to this Feature by an EndFeatureMembership in which the Feature is an
      * ownedMemberFeature.
      * 
-     * ```ocl
+     * ```
      * /endOwningType : Type [0..1] {subsets typeWithEndFeature, owningType}
      * ```
      */
@@ -74,7 +75,7 @@ interface Feature : Type {
     /**
      * The last of the chainingFeatures of this Feature, if it has any. Otherwise, this Feature itself.
      * 
-     * ```ocl
+     * ```
      * /featureTarget : Feature
      * ```
      */
@@ -86,7 +87,7 @@ interface Feature : Type {
      * these Types, including at least all the featuringTypes of its typeFeaturings. If the Feature is chained, then
      * the featuringTypes of the first Feature in the chain are also featuringTypes of the chained Feature.
      * 
-     * ```ocl
+     * ```
      * /featuringType : Type [0..*] {ordered}
      * ```
      */
@@ -108,7 +109,7 @@ interface Feature : Type {
      * exist after its featuring instance no longer does and cannot be values of another composite feature that is not on the
      * same featuring instance.Tap on a clip to paste it in the text box.Tap on a clip to paste it in the text box.
      * 
-     * ```ocl
+     * ```
      * isComposite : Boolean
      * ```
      */
@@ -118,7 +119,7 @@ interface Feature : Type {
      * If isVariable is true, then whether the value of this Feature nevertheless does not change over all snapshots of
      * its owningType.
      * 
-     * ```ocl
+     * ```
      * isConstant : Boolean
      * ```
      */
@@ -127,7 +128,7 @@ interface Feature : Type {
     /**
      * Whether the values of this Feature can always be computed from the values of other Features.
      * 
-     * ```ocl
+     * ```
      * isDerived : Boolean
      * ```
      */
@@ -142,7 +143,7 @@ interface Feature : Type {
      * cardinality, ordering, and uniqueness of the collection of values of that Feature reached by navigation when the
      * values of the other n-1 end Features are held fixed.
      * 
-     * ```ocl
+     * ```
      * isEnd : Boolean
      * ```
      */
@@ -151,7 +152,7 @@ interface Feature : Type {
     /**
      * Whether an order exists for the values of this Feature or not.
      * 
-     * ```ocl
+     * ```
      * isOrdered : Boolean
      * ```
      */
@@ -161,7 +162,7 @@ interface Feature : Type {
      * Whether the values of this Feature are contained in the space and time of instances of the domain of the Feature
      * and represent the same thing as those instances.
      * 
-     * ```ocl
+     * ```
      * isPortion : Boolean
      * ```
      */
@@ -170,7 +171,7 @@ interface Feature : Type {
     /**
      * Whether or not values for this Feature must have no duplicates or not.
      * 
-     * ```ocl
+     * ```
      * isUnique : Boolean
      * ```
      */
@@ -180,7 +181,7 @@ interface Feature : Type {
      * Whether the value of this Feature might vary over time. That is, whether the Feature may have a different value
      * for each snapshot of an owningType that is an Occurrence.
      * 
-     * ```ocl
+     * ```
      * isVariable : Boolean
      * ```
      */
@@ -190,7 +191,7 @@ interface Feature : Type {
      * The one ownedSubsetting of this Feature, if any, that is a CrossSubsetting, for which the Feature
      * is the crossingFeature.
      * 
-     * ```ocl
+     * ```
      * /ownedCrossSubsetting : CrossSubsetting [0..1] {subsets ownedSubsetting}
      * ```
      */
@@ -201,7 +202,7 @@ interface Feature : Type {
      * The ownedRelationships of this Feature that are FeatureChainings, for which the Feature will be the
      * featureChained.
      * 
-     * ```ocl
+     * ```
      * /ownedFeatureChaining : FeatureChaining [0..*] {subsets sourceRelationship, ownedRelationship, ordered}
      * ```
      */
@@ -212,51 +213,51 @@ interface Feature : Type {
      * The ownedRelationships of this Feature that are FeatureInvertings and for which the Feature is the
      * featureInverted.
      * 
-     * ```ocl
+     * ```
      * /ownedFeatureInverting : FeatureInverting [0..*] {subsets ownedRelationship, invertingFeatureInverting}
      * ```
      */
-    val ownedFeatureInverting: List<FeatureInverting>
+    val ownedFeatureInverting: Collection<FeatureInverting>
         get() = ownedRelationship.filterIsInstance<FeatureInverting>().filter { it.featureInverted === this }
 
     /**
      * The ownedSubsettings of this Feature that are Redefinitions, for which the Feature is the
      * redefiningFeature.
      * 
-     * ```ocl
+     * ```
      * /ownedRedefinition : Redefinition [0..*] {subsets ownedSubsetting}
      * ```
      */
-    val ownedRedefinition: List<Redefinition>
+    val ownedRedefinition: Collection<Redefinition>
         get() = ownedSubsetting.filterIsInstance<Redefinition>()
 
     /**
      * The one ownedSubsetting of this Feature, if any, that is a ReferenceSubsetting, for which the Feature is
      * the referencingFeature.
      * 
-     * ```ocl
+     * ```
      * /ownedReferenceSubsetting : ReferenceSubsetting [0..1] {subsets ownedSubsetting}
      * ```
      */
     val ownedReferenceSubsetting: ReferenceSubsetting?
-        get() = ownedSubsetting.firstOrNull { it is ReferenceSubsetting } as ReferenceSubsetting
+        get() = ownedSubsetting.firstIsInstanceOrNull<ReferenceSubsetting>()
 
     /**
      * The ownedSpecializations of this Feature that are Subsettings, for which the Feature is the
      * subsettingFeature.
      * 
-     * ```ocl
+     * ```
      * /ownedSubsetting : Subsetting [0..*] {subsets ownedSpecialization, subsetting}
      * ```
      */
-    val ownedSubsetting: List<Subsetting>
+    val ownedSubsetting: Collection<Subsetting>
         get() = ownedSpecialization.filterIsInstance<Subsetting>()
 
     /**
      * The ownedRelationships of this Feature that are TypeFeaturings and for which the Feature is the
      * featureOfType.
      * 
-     * ```ocl
+     * ```
      * /ownedTypeFeaturing : TypeFeaturing [0..*] {subsets ownedRelationship, typeFeaturing, ordered}
      * ```
      */
@@ -267,7 +268,7 @@ interface Feature : Type {
      * The ownedSpecializations of this Feature that are FeatureTypings, for which the Feature is the
      * typedFeature.
      * 
-     * ```ocl
+     * ```
      * /ownedTyping : FeatureTyping [0..*] {subsets ownedSpecialization, typing, ordered}
      * ```
      */
@@ -277,7 +278,7 @@ interface Feature : Type {
     /**
      * The FeatureMembership that owns this Feature as an ownedMemberFeature, determining its owningType.
      * 
-     * ```ocl
+     * ```
      * /owningFeatureMembership : FeatureMembership [0..1] {subsets owningMembership}
      * ```
      */
@@ -286,7 +287,7 @@ interface Feature : Type {
     /**
      * The Type that is the owningType of the owningFeatureMembership of this Feature.
      * 
-     * ```ocl
+     * ```
      * /owningType : Type [0..1] {subsets typeWithFeature, owningNamespace, featuringType}
      * ```
      */
@@ -297,7 +298,7 @@ interface Feature : Type {
      * a Feature are derived from its typings and the types of its subsettings. If the Feature is chained, then the
      * types of the last Feature in the chain are also types of the chained Feature.
      * 
-     * ```ocl
+     * ```
      * /type : Type [0..*] {ordered}
      * ```
      */
@@ -306,7 +307,7 @@ interface Feature : Type {
     /**
      * Return this Feature and all the Features that are directly or indirectly Redefined by this Feature.
      *
-     * ```ocl
+     * ```
      * allRedefinedFeatures() : Feature [0..*]
      * body: ownedRedefinition.redefinedFeature->
      *     closure(ownedRedefinition.redefinedFeature)->
@@ -317,7 +318,7 @@ interface Feature : Type {
         add(this@Feature)
     }
 
-    fun asCartesianProduct(): List<Type>
+    fun asCartesianProduct(): Collection<Type>
     fun canAccess(feature: Feature): Boolean
     fun directionFor(type: Type): FeatureDirectionKind?
     override fun effectiveName(): String?
@@ -332,7 +333,7 @@ interface Feature : Type {
     fun redefines(redefinedFeature: Feature): Boolean
     fun redefinesFromLibrary(libraryFeatureName: String): Boolean
     fun subsetsChain(first: Feature, second: Feature): Boolean
-    fun typingFeatures(): List<Feature>
+    fun typingFeatures(): Collection<Feature>
 
     val typeFeaturing: Collection<TypeFeaturing>
     val redefinition: Collection<Redefinition>

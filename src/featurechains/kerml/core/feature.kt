@@ -10,3 +10,6 @@ val Iterable<Feature>.isEnd: Collection<Boolean>
 
 val Iterable<Feature>.redefinition: Collection<Redefinition>
     get() = flatMap(Feature::redefinition)
+
+val Iterable<Feature>.ownedRedefinition: Collection<Redefinition>
+    get() = flatMap(Feature::ownedRedefinition)

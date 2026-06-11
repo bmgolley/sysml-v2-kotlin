@@ -34,5 +34,6 @@ interface FeatureMembership : OwningMembership {
 
     override val membershipOwningNamespace: Namespace
         get() = owningType
-}
 
+    val memberFeature: Feature
+}

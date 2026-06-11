@@ -8,3 +8,7 @@ import sandbox.kerml.core.FeatureMembership
 /** @see FeatureMembership.ownedMemberFeature */
 val Iterable<FeatureMembership>.ownedMemberFeature: List<Feature>
     get() = map(FeatureMembership::ownedMemberFeature)
+
+/** @see FeatureMembership.memberFeature */
+val Iterable<FeatureMembership>.memberFeature: List<Feature>
+    get() = map(FeatureMembership::memberFeature)

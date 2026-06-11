@@ -6,6 +6,7 @@ import sandbox.featurechains.kerml.core.differencingType
 import sandbox.featurechains.kerml.core.directionOfExcluding
 import sandbox.featurechains.kerml.core.general
 import sandbox.featurechains.kerml.core.intersectingType
+import sandbox.featurechains.kerml.core.memberFeature
 import sandbox.featurechains.kerml.core.multiplicity
 import sandbox.featurechains.kerml.core.nonPrivateMemberships
 import sandbox.featurechains.kerml.core.ownedMemberFeature
@@ -17,6 +18,7 @@ import sandbox.kerml.root.Membership
 import sandbox.kerml.root.Namespace
 import sandbox.kerml.root.Import
 import sandbox.util.Validator
+import sandbox.util.firstIsInstanceOrNull
 
 /**
  * A `Type` is a [Namespace] that is the most general kind of [Element] supporting the semantics of classification. A
@@ -27,13 +29,13 @@ interface Type : Namespace {
     /**
      * The interpretations of a `Type` with `differencingTypes` are asserted to be those of the first of those `Types`,
      * but not including those of the remaining `Types`. For example, a [Classifier] might be the difference of a
-     * [Classifier] for people and another for people of a particular nationality, leaving people who are not of that
+     * `Classifier` for people and another for people of a particular nationality, leaving people who are not of that
      * nationality. Similarly, a feature of people might be the difference between a feature for their children and a
-     * [Classifier] for people of a particular sex, identifying their children not of that sex (because the
+     * `Classifier` for people of a particular sex, identifying their children not of that sex (because the
      * interpretations of the children [Feature] that identify those of that sex are also interpretations of the
-     * [Classifier] for that sex).
+     * `Classifier` for that sex).
      * 
-     * ```ocl
+     * ```
      * /differencingType : Type [0..*] {ordered}
      *
      * differencingType = ownedDifferencing.differencingType
@@ -45,7 +47,7 @@ interface Type : Namespace {
     /**
      * The features of this `Type` that have a non-null direction.
      * 
-     * ```ocl
+     * ```
      * /directedFeature : Feature [0..*] {subsets feature, ordered}
      *
      * directedFeature = feature->select(f | directionOf(f) <> null)
@@ -57,7 +59,7 @@ interface Type : Namespace {
     /**
      * All features of this `Type` with `isEnd = true`.
      *
-     * ```ocl
+     * ```
      * /endFeature : Feature [0..*] {subsets feature, ordered}
      *
      * endFeature = feature->select(isEnd)
@@ -70,7 +72,7 @@ interface Type : Namespace {
      * The [ownedMemberFeatures][FeatureMembership.ownedMemberFeature] of the [featureMemberships][featureMembership] of
      * this `Type`.
      * 
-     * ```ocl
+     * ```
      * /feature : Feature [0..*] {subsets member, ordered}
      *
      * feature = featureMembership.ownedMemberFeature
@@ -84,7 +86,7 @@ interface Type : Namespace {
      * those inheritedMemberships that are FeatureMemberships (but does not include any
      * importedMemberships).
      * 
-     * ```ocl
+     * ```
      * /featureMembership : FeatureMembership [0..*] {ordered}
      *
      * featureMembership = ownedFeatureMembership->union(
@@ -92,12 +94,12 @@ interface Type : Namespace {
      * ```
      */
     val featureMembership: List<FeatureMembership>
-        get() = inheritedMembership.filterIsInstance<FeatureMembership>()
+        get() = ownedFeatureMembership + inheritedMembership.filterIsInstance<FeatureMembership>()
 
     /**
      * All the memberFeatures of the inheritedMemberships of this Type that are FeatureMemberships.
      * 
-     * ```ocl
+     * ```
      * /inheritedFeature : Feature [0..*] {subsets feature, ordered}
      *
      * inheritedFeature = inheritedMemberships->
@@ -105,13 +107,13 @@ interface Type : Namespace {
      * ```
      */
     val inheritedFeature: List<Feature>
-        get() = inheritedMembership.filterIsInstance<FeatureMembership>().ownedMemberFeature
+        get() = inheritedMembership.filterIsInstance<FeatureMembership>().memberFeature
 
     /**
      * All [Memberships][Membership] inherited by this `Type` via [Specialization] or [Conjugation]. These are included
      * in the derived union for the memberships of the `Type`.
      * 
-     * ```ocl
+     * ```
      * /inheritedMembership : Membership [0..*] {subsets membership, ordered}
      *
      * inheritedMembership = inheritedMemberships(Set{}, Set{}, false)
@@ -124,7 +126,7 @@ interface Type : Namespace {
      * All features related to this `Type` by [FeatureMemberships][FeatureMembership] that have direction
      * [in][FeatureDirectionKind.IN] or [inout][FeatureDirectionKind.INOUT].
      * 
-     * ```ocl
+     * ```
      * /input : Feature [0..*] {subsets directedFeature, ordered}
      *
      * input = feature->select(f |
@@ -145,7 +147,7 @@ interface Type : Namespace {
      * [Classifier] for people of that sex (because the interpretations of the children [Feature] that identify those of
      * that sex are also interpretations of the [Classifier] for that sex).
      * 
-     * ```ocl
+     * ```
      * /intersectingType : Type [0..*] {ordered}
      *
      * intersectingType = ownedIntersecting.intersectingType
@@ -164,7 +166,7 @@ interface Type : Namespace {
     /**
      * Indicates whether this `Type` has an [ownedConjugator].
      * 
-     * ```ocl
+     * ```
      * /isConjugated : Boolean
      * ```
      */
@@ -178,7 +180,7 @@ interface Type : Namespace {
      * require everything it classifies to have four wheels, but not all four wheeled things would classify as cars. However,
      * if the Type Car were sufficient, it would classify all four-wheeled things.)
      * 
-     * ```ocl
+     * ```
      * isSufficient : Boolean
      * ```
      */
@@ -189,7 +191,7 @@ interface Type : Namespace {
      * such [ownedMember], then the cardinality of this Type is constrained by all the [Multiplicity] constraints
      * applicable to any direct supertypes.
      * 
-     * ```ocl
+     * ```
      * /multiplicity : Multiplicity [0..1] {subsets ownedMember}
      *
      * multiplicity =
@@ -201,13 +203,13 @@ interface Type : Namespace {
      * ```
      */
     val multiplicity: Multiplicity?
-        get() = ownedMember.firstOrNull(Multiplicity::class::isInstance) as Multiplicity?
+        get() = ownedMember.firstIsInstanceOrNull<Multiplicity>()
 
     /**
      * All features related to this Type by [FeatureMemberships][FeatureMembership] that have direction
      * [out][FeatureDirectionKind.OUT] or [inout][FeatureDirectionKind.INOUT].
      * 
-     * ```ocl
+     * ```
      * /output : Feature [0..*] {subsets directedFeature, ordered}
      *
      * output = feature->select(f |
@@ -222,7 +224,7 @@ interface Type : Namespace {
     /**
      * A [Conjugation] owned by this Type for which the Type is the [originalType][Conjugation.originalType].
      * 
-     * ```ocl
+     * ```
      * /ownedConjugator : Conjugation [0..1] {subsets ownedRelationship, conjugator}
      *
      * ownedConjugator =
@@ -233,13 +235,13 @@ interface Type : Namespace {
      * ```
      */
     val ownedConjugator: Conjugation?
-        get() = ownedRelationship.firstOrNull(Conjugation::class::isInstance) as Conjugation?
+        get() = ownedRelationship.firstIsInstanceOrNull<Conjugation>()
 
     /**
      * The [ownedRelationships][ownedRelationship] of this `Type` that are [Differencings][Differencing], having this
      * Type as their [typeDifferenced][Differencing.typeDifferenced].
      * 
-     * ```ocl
+     * ```
      * /ownedDifferencing : Differencing [0..*] {subsets sourceRelationship, ownedRelationship, ordered}
      *
      * ownedDifferencing = ownedRelationship->selectByKind(Differencing)
@@ -252,19 +254,19 @@ interface Type : Namespace {
      * The [ownedRelationships][ownedRelationship] of this `Type` that are [Disjoinings][Disjoining], for which the
      * `Type` is the [typeDisjoined][Disjoining.typeDisjoined] `Type`.
      * 
-     * ```ocl
+     * ```
      * /ownedDisjoining : Disjoining [0..*] {subsets ownedRelationship, disjoiningTypeDisjoining}
      *
      * ownedDisjoining = ownedRelationship->selectByKind(Disjoining)
      * ```
      */
-    val ownedDisjoining: List<Disjoining>
+    val ownedDisjoining: Collection<Disjoining>
         get() = ownedRelationship.filterIsInstance<Disjoining>()
 
     /**
      * All [endFeatures][endFeature] of this `Type` that are [ownedFeatures][ownedFeature].
      * 
-     * ```ocl
+     * ```
      * /ownedEndFeature : Feature [0..*] {subsets endFeature, ownedFeature, ordered}
      *
      * ownedEndFeature = ownedFeature->select(isEnd)
@@ -277,7 +279,7 @@ interface Type : Namespace {
      * The [ownedMemberFeatures][ownedMemberFeature] of the [ownedFeatureMemberships][ownedFeatureMembership] of this
      * `Type`.
      * 
-     * ```ocl
+     * ```
      * /ownedFeature : Feature [0..*] {subsets ownedMember, ordered}
      *
      * ownedFeature = ownedFeatureMembership.ownedMemberFeature
@@ -291,7 +293,7 @@ interface Type : Namespace {
      * which the `Type` is the [owningType][FeatureMembership.owningType]. Each such [FeatureMembership] identifies an
      * [ownedFeature] of the `Type`.
      * 
-     * ```ocl
+     * ```
      * /ownedFeatureMembership : FeatureMembership [0..*] {subsets ownedMembership, featureMembership, ordered}
      *
      * ownedFeatureMembership = ownedRelationship->selectByKind(FeatureMembership)
@@ -304,7 +306,7 @@ interface Type : Namespace {
      * The [ownedRelationships][ownedRelationship] of this `Type` that are [Intersectings][Intersecting], have the
      * `Type` as their [typeIntersected][Intersecting.typeIntersected].
      * 
-     * ```ocl
+     * ```
      * /ownedIntersecting : Intersecting [0..*] {subsets ownedRelationship, sourceRelationship, ordered}
      *
      * ownedIntersecting = ownedRelationship->selectByKind(Intersecting)
@@ -317,7 +319,7 @@ interface Type : Namespace {
      * The [ownedRelationships][ownedRelationship] of this `Type` that are [Specializations][Specialization], for which
      * the `Type` is the [specific][Specialization.specific] `Type`.
      * 
-     * ```ocl
+     * ```
      * /ownedSpecialization : Specialization [0..*] {subsets specialization, ownedRelationship, ordered}
      *
      * ownedSpecialization = ownedRelationship->selectByKind(Specialization)->
@@ -355,14 +357,14 @@ interface Type : Namespace {
      * If the memberElement of the given membership is a Feature, then return all Features directly or indirectly
      * redefined by the memberElement.
      *
-     * ```ocl
+     * ```
      * allRedefinedFeaturesOf(membership : Membership) : Feature [0..*]
      * body: if not membership.memberElement.oclIsType(Feature) then Set{}
      * else membership.memberElement.oclAsType(Feature).allRedefinedFeatures()
      * endif
      * ```
      */
-    fun allRedefinedFeaturesOf(membership: Membership): Set<Feature> =
+    fun allRedefinedFeaturesOf(membership: Membership): Collection<Feature> =
         (membership.memberElement as? Feature)?.allRedefinedFeatures().orEmpty()
 
     /**
@@ -370,7 +372,7 @@ interface Type : Namespace {
      * supertypes operation with excludeImplied = false).
      * 
      * `allSupertypes() : Type [0..*]`
-     * ```ocl
+     * ```
      * body: OrderedSet{self}->closure(supertypes(false))
      * ```
      */
@@ -380,7 +382,7 @@ interface Type : Namespace {
      * If the given feature is a feature of this `Type`, then return its direction relative to this `Type`, taking
      * conjugation into account.
      *
-     * ```ocl
+     * ```
      * directionOf(feature : Feature) : FeatureDirectionKind [0..1]
      * body: directionOfExcluding(f, Set{})
      * ```
@@ -391,7 +393,7 @@ interface Type : Namespace {
      * Return the direction of the given feature relative to this `Type`, excluding a given set of `Types` from the
      * search of supertypes of this `Type`.
      *
-     * ```ocl
+     * ```
      * directionOfExcluding(feature : Feature, excluded : Type [0..*]) : FeatureDirectionKind [0..1]
      * body: let excludedSelf : Set(Type) = excluded->including(self) in
      * if feature.owningType = self then feature.direction
@@ -429,7 +431,7 @@ interface Type : Namespace {
      * [excludeImplied]` = false`, or all nonimplied [ownedSpecializations][ownedSpecialization], if [excludeImplied]` =
      * true`.
      *
-     * ```ocl
+     * ```
      * supertypes(excludeImplied : Boolean) : Type [0..*]
      * body: if isConjugated then Sequence{conjugator.originalType}
      * else if not excludeImplied then ownedSpecialization.general
@@ -438,8 +440,8 @@ interface Type : Namespace {
      * endif
      * ```
      */
-    fun supertypes(excludeImplied: Boolean): Collection<Type> = when {
-        isConjugated -> setOf() // conjugator.originalType
+    fun supertypes(excludeImplied: Boolean = false): Collection<Type> = when {
+        isConjugated -> TODO() // setOf(conjugator.originalType)
         !excludeImplied -> ownedSpecialization.general
         else -> ownedSpecialization.filterNot(Specialization::isImplied).general
     }
@@ -449,7 +451,7 @@ interface Type : Namespace {
      * supertypes that are this `Type` or are in the given set of [excludedTypes]. If [excludeImplied]` = true`, then
      * also transitively exclude any supertypes from implied [Specializations][Specialization].
      *
-     * ```ocl
+     * ```
      * inheritableMemberships(excludedNamespaces : Namespace [0..*], excludedTypes : Type [0..*], excludeImplied :
      *      Boolean) : Membership [0..*]
      * body: let excludingSelf : Set(Type) = excludedType->including(self) in
@@ -473,7 +475,7 @@ interface Type : Namespace {
      * [excludedNamespaces], [Specializations][Specialization] of [excludedTypes], and, if [excludeImplied]` = true`,
      * all implied [Specializations][Specialization].
      *
-     * ```ocl
+     * ```
      * inheritedMemberships(excludedNamespaces : Namespace [0..*], excludedTypes : Type [0..*], excludeImplied :
      *      Boolean) : Membership [0..*]
      * body: removeRedefinedFeatures(
@@ -491,7 +493,7 @@ interface Type : Namespace {
      * By default, this `Type` is compatible with an [otherType] if it directly or indirectly specializes the
      * [otherType].
      *
-     * ```ocl
+     * ```
      * isCompatibleWith(otherType : Type)
      * body: specializes(otherType)
      * ```
@@ -501,7 +503,7 @@ interface Type : Namespace {
     /**
      * Return the owned or inherited [Multiplicities][Multiplicity] for this `Type`.
      *
-     * ```ocl
+     * ```
      * multiplicities() : Multiplicity [0..*]
      * body: if multiplicity <> null then OrderedSet{multiplicity}
      * else
@@ -530,7 +532,7 @@ interface Type : Namespace {
      * [Memberships][Membership], exclude `Types` in the given set of [excludedTypes]. If [excludeImplied]` = true`,
      * then also exclude any supertypes from implied [Specializations][Specialization].
      *
-     * ```ocl
+     * ```
      * nonPrivateMemberships(excludedNamespaces : Namespace [0..*], excludedTypes : Type [0..*], excludeImplied :
      * Boolean) : Membership [0..*]
      * body: let publicMemberships : OrderedSet(Membership) =
@@ -567,7 +569,7 @@ interface Type : Namespace {
      * [memberElements][Membership.memberElement] is a [Feature] includes the [memberElement][Membership.memberElement]
      * and all [Features][Feature] directly or indirectly redefined by the [memberElement][Membership.memberElement].
      *
-     * ```ocl
+     * ```
      * removeRedefinedFeatures(memberships : Membership [0..*]) : Membership [0..*]
      * body: let reducedMemberships : Sequence(Membership) =
      *     memberships->reject(mem1 |
@@ -593,7 +595,7 @@ interface Type : Namespace {
     /**
      * Check whether this Type is a direct or indirect specialization of the given supertype.
      *
-     * ```ocl
+     * ```
      * specializes(supertype : Type) : Boolean
      *
      * body: if isConjugated then
@@ -613,7 +615,7 @@ interface Type : Namespace {
      * Check whether this `Type` is a direct or indirect specialization of the named library `Type`. [libraryTypeName]
      * must conform to the syntax of a KerML qualified name and must resolve to a `Type` in global scope.
      *
-     * ```ocl
+     * ```
      * specializesFromLibrary(libraryTypeName : String) : Boolean
      *
      * body: let mem : Membership = resolveGlobal(libraryTypeName) in
@@ -628,7 +630,7 @@ interface Type : Namespace {
     /**
      * The visible [Memberships][Membership] of a `Type` include [inheritedMemberships].
      *
-     * ```ocl
+     * ```
      * visibleMemberships(excluded : Namespace [0..*], isRecursive : Boolean, includeAll : Boolean) : Membership [0..*]
      * {redefines visibleMemberships}
      *
@@ -667,7 +669,7 @@ interface Type : Namespace {
         /**
          * A Type must have at most one owned Conjugation Relationship.
          * 
-         * ```ocl
+         * ```
          * ownedRelationship->selectByKind(Conjugation)->size() <= 1
          * ```
          */
@@ -677,7 +679,7 @@ interface Type : Namespace {
         /**
          * A Type cannot be one of its own differencingTypes.
          * 
-         * ```ocl
+         * ```
          * differencingType->excludes(self)
          * ```
          */
@@ -686,7 +688,7 @@ interface Type : Namespace {
         /**
          * A Type cannot be one of its own intersectingTypes.
          * 
-         * ```ocl
+         * ```
          * intersectingType->excludes(self)
          * ```
          */
@@ -695,7 +697,7 @@ interface Type : Namespace {
         /**
          * A Type must not have exactly one ownedDifferencing.
          * 
-         * ```ocl
+         * ```
          * ownedDifferencing->size() <> 1
          * ```
          */
@@ -704,7 +706,7 @@ interface Type : Namespace {
         /**
          * A Type must not have exactly one ownedIntersecting.
          * 
-         * ```ocl
+         * ```
          * ownedIntersecting->size() <> 1
          * ```
          */
@@ -713,7 +715,7 @@ interface Type : Namespace {
         /**
          * A Type may have at most one ownedMember that is a Multiplicity.
          * 
-         * ```ocl
+         * ```
          * ownedMember->selectByKind(Multiplicity)->size() <= 1
          * ```
          */
@@ -724,7 +726,7 @@ interface Type : Namespace {
         /**
          * A Type must not have exactly one ownedUnioning.
          * 
-         * ```ocl
+         * ```
          * ownedUnioning->size() <> 1
          * ```
          */
@@ -733,7 +735,7 @@ interface Type : Namespace {
         /**
          * A Type cannot be one of its own unioningTypes.
          * 
-         * ```ocl
+         * ```
          * unioningType->excludes(self)
          * ```
          */
