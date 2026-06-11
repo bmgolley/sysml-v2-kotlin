@@ -1,0 +1,3 @@
+interface ItemDefinition
+
+interface ItemUsage

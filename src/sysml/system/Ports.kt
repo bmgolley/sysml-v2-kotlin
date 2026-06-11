@@ -1,0 +1,9 @@
+interface ConjugatedPortDefinition
+
+interface ConjugatedPortTyping
+
+interface PortConjugation
+
+interface PortDefinition
+
+interface PortUsage
